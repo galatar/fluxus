@@ -12,6 +12,7 @@ import {
   useNodesState,
   useReactFlow,
   type Connection,
+  type NodeChange,
 } from '@xyflow/react'
 import { aParrilla, limpiar, nuevoId, PARRILLA } from '../almacen'
 import { ORDEN_TIPOS, TIPOS } from '../catalogo'
@@ -64,6 +65,19 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
     }, 300)
     return () => clearTimeout(t)
   }, [nodes, edges, esquema.id, onCambio])
+
+  // Ajuste a la parrilla hecho a mano: el snapToGrid de React Flow ajusta la
+  // esquina de la caja, no el centro, y con alturas distintas las flechas
+  // salían con escalón.
+  const alMoverNodos = useCallback(
+    (cambios: NodeChange<Nodo>[]) =>
+      onNodesChange(
+        cambios.map((c) =>
+          c.type === 'position' && c.position ? { ...c, position: { x: aParrilla(c.position.x), y: aParrilla(c.position.y) } } : c,
+        ),
+      ),
+    [onNodesChange],
+  )
 
   const onConnect = useCallback(
     (c: Connection) => setEdges((es) => addEdge<Conexion>({ ...c, id: nuevoId(), type: 'conexion', data: { tipo: 'normal' } }, es)),
@@ -121,7 +135,7 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodesChange={onNodesChange}
+        onNodesChange={alMoverNodos}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         nodeTypes={nodeTypes}
@@ -130,8 +144,6 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
         connectionMode={ConnectionMode.Loose}
         colorMode={tema}
         nodeOrigin={[0.5, 0.5]}
-        snapToGrid
-        snapGrid={[PARRILLA, PARRILLA]}
         deleteKeyCode={dialogo ? null : ['Backspace', 'Delete']}
         onDragOver={(ev) => {
           ev.preventDefault()

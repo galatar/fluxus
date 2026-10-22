@@ -14,10 +14,17 @@ export const aParrilla = (v: number) => Math.round(v / PARRILLA) * PARRILLA
 const VERSION = 2
 
 function migrar(e: Esquema): Esquema {
-  if ((e.version ?? 1) >= VERSION) return e
+  const v1 = (e.version ?? 1) < 2
   const nodes = e.nodes.map((n) => {
-    const [ancho, alto] = n.data.tipo === 'inicio' ? [130, 52] : [220, 74]
-    return { ...n, position: { x: aParrilla(n.position.x + ancho / 2), y: aParrilla(n.position.y + alto / 2) } }
+    let { x, y } = n.position
+    if (v1) {
+      const [ancho, alto] = n.data.tipo === 'inicio' ? [130, 52] : [220, 74]
+      x += ancho / 2
+      y += alto / 2
+    }
+    // Siempre a la parrilla: arregla también centros que quedaron descuadrados
+    // con el snapToGrid de React Flow (ajustaba la esquina, no el centro).
+    return { ...n, position: { x: aParrilla(x), y: aParrilla(y) } }
   })
   return { ...e, nodes, version: VERSION }
 }
