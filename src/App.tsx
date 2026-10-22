@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Copy, Download, Moon, Plus, Sun, Trash2, Upload, Workflow } from 'lucide-react'
-import { cargarEsquemas, esquemaVacio, exportar, guardarEsquemas, importar, nuevoId } from './almacen'
+import { Copy, Download, Moon, Plus, Sparkles, Sun, Trash2, Upload, Workflow } from 'lucide-react'
+import { cargarEsquemas, esquemaEjemplo, esquemaVacio, exportar, guardarEsquemas, importar, nuevoId } from './almacen'
 import { Editor } from './lienzo/Editor'
 import type { Esquema } from './tipos'
 
@@ -99,8 +99,8 @@ export default function App() {
         </nav>
 
         <div className="pie">
-          <button className="boton" onClick={() => ficheroRef.current?.click()}>
-            <Upload size={13} /> Importar
+          <button className="boton" onClick={() => crear(esquemaEjemplo())} title="Añade una copia del ejemplo de teletrabajo">
+            <Sparkles size={13} /> Ver un ejemplo
           </button>
           <button className="boton" onClick={() => setTema(tema === 'dark' ? 'light' : 'dark')} title="Cambiar tema">
             {tema === 'dark' ? <Sun size={13} /> : <Moon size={13} />}
@@ -129,7 +129,10 @@ export default function App() {
                 onChange={(e) => cambiar(activo.id, { descripcion: e.target.value })}
                 placeholder="Para qué sirve esta aplicación o módulo"
               />
-              <button className="boton" onClick={() => exportar(activo)}>
+              <button className="boton" onClick={() => ficheroRef.current?.click()} title="Abrir un esquema exportado (.json)">
+                <Upload size={13} /> Importar
+              </button>
+              <button className="boton" onClick={() => exportar(activo)} title="Descargar este esquema como .json">
                 <Download size={13} /> Exportar
               </button>
             </header>
@@ -138,9 +141,14 @@ export default function App() {
         ) : (
           <div className="vacio">
             <p>No hay ningún esquema.</p>
-            <button className="boton primario" onClick={() => crear(esquemaVacio())}>
-              <Plus size={14} /> Crear el primero
-            </button>
+            <div className="fila-centrada">
+              <button className="boton primario" onClick={() => crear(esquemaVacio())}>
+                <Plus size={14} /> Crear el primero
+              </button>
+              <button className="boton" onClick={() => ficheroRef.current?.click()}>
+                <Upload size={13} /> Importar
+              </button>
+            </div>
           </div>
         )}
       </main>

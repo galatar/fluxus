@@ -1,4 +1,4 @@
-import type { Conexion, Esquema, Nodo, TipoConexion } from './tipos'
+import type { Campo, Conexion, Esquema, Nodo, TipoConexion } from './tipos'
 
 const CLAVE = 'flujus:esquemas'
 
@@ -63,24 +63,80 @@ function e(source: string, sh: string, target: string, th: string, tipo: TipoCon
   return { id: `${source}-${target}`, type: 'conexion', source, sourceHandle: sh, target, targetHandle: th, data: { tipo, etiqueta } }
 }
 
-function esquemaEjemplo(): Esquema {
+function campo(clave: string, etiqueta: string, tipo: Campo['tipo'], obligatorio = true, opciones?: string): Campo {
+  return { id: clave, clave, etiqueta, tipo, obligatorio, opciones }
+}
+
+const RESOLUCION = `RESOLUCIÓN DE LA GERENCIA
+
+Expediente: {{numero_expediente}}
+Fecha: {{fecha_actual}}
+
+Vista la solicitud presentada por {{nombre_completo}}, con DNI {{dni}}, que ocupa el puesto de {{puesto}}, y el informe favorable del responsable del servicio,
+
+RESUELVO
+
+Autorizar la prestación de servicios en la modalidad de teletrabajo durante {{dias_teletrabajo}} a la semana, a partir del {{fecha_inicio}}.`
+
+const DENEGACION = `RESOLUCIÓN DE LA GERENCIA
+
+Expediente: {{numero_expediente}}
+
+Vista la solicitud presentada por {{nombre_completo}} y el informe del responsable del servicio, que indica:
+
+{{observaciones}}
+
+RESUELVO
+
+Denegar la solicitud de teletrabajo.`
+
+export function esquemaEjemplo(): Esquema {
+  const nodos = [
+    n('n1', 'inicio', 0, 18, 'Inicio', 'persona solicitante'),
+    n('n2', 'formulario', 180, 0, 'Solicitud', 'datos + horario propuesto', {
+      campos: [
+        campo('nombre_completo', 'Nombre y apellidos', 'texto'),
+        campo('dni', 'DNI', 'dni'),
+        campo('puesto', 'Puesto de trabajo', 'texto'),
+        campo('dias_teletrabajo', 'Días de teletrabajo', 'lista', true, '1 día\n2 días\n3 días'),
+        campo('fecha_inicio', 'Fecha de inicio', 'fecha'),
+        campo('horario_propuesto', 'Horario propuesto', 'parrafo', false),
+      ],
+    }),
+    n('n3', 'aportado', 480, 0, 'Plan de trabajo', 'firmado por la persona', {
+      requisitos: [
+        { id: 'd1', nombre: 'Plan de trabajo', obligatorio: true, formato: 'pdf', firmado: true },
+        { id: 'd2', nombre: 'Autoevaluación del puesto', obligatorio: false, formato: 'pdf', firmado: false, notas: 'modelo de la web del PTGAS' },
+      ],
+    }),
+    n('n4', 'decision', 780, 0, '¿Completa?', 'revisa la unidad'),
+    n('n5', 'paso', 1080, 0, 'Informe', 'responsable del servicio', {
+      campos: [
+        campo('sentido_informe', 'Sentido del informe', 'lista', true, 'Favorable\nDesfavorable'),
+        campo('observaciones', 'Observaciones', 'parrafo', false),
+      ],
+    }),
+    n('n6', 'espera', 780, 220, 'Subsanación', '10 días hábiles'),
+    n('n7', 'decision', 1080, 220, '¿Favorable?', 'valora el informe'),
+    n('n8', 'documento', 1380, 220, 'Resolución', 'plantilla: concesión', {
+      plantilla: { formato: 'pdf', nombreFichero: '{{numero_expediente}}-concesion', cuerpo: RESOLUCION },
+    }),
+    n('n9', 'notificacion', 1380, 440, 'Notificar', 'persona interesada'),
+    n('n10', 'fin', 1380, 660, 'Concedido', 'alta en teletrabajo', { resultado: 'ok' }),
+    n('n11', 'documento', 1080, 440, 'Denegación', 'plantilla: denegatoria', {
+      plantilla: { formato: 'pdf', nombreFichero: '{{numero_expediente}}-denegacion', cuerpo: DENEGACION },
+    }),
+    n('n12', 'fin', 780, 440, 'Denegado', 'fin del procedimiento', { resultado: 'ko' }),
+  ]
+  const si = e('n7', 'right', 'n8', 'left', 'normal', 'sí')
+  si.data!.condicion = { campo: 'sentido_informe', operador: 'igual', valor: 'Favorable' }
+  const no = e('n7', 'bottom', 'n11', 'top', 'error', 'no')
+  no.data!.porDefecto = true
+
   return {
     ...esquemaVacio('Solicitud de teletrabajo'),
     descripcion: 'Ejemplo: una persona del PTGAS pide teletrabajo y la unidad lo resuelve.',
-    nodes: [
-      n('n1', 'inicio', 0, 11, 'Inicio', 'persona solicitante'),
-      n('n2', 'formulario', 180, 0, 'Solicitud', 'datos + horario propuesto'),
-      n('n3', 'aportado', 480, 0, 'Plan de trabajo', 'firmado por la persona'),
-      n('n4', 'decision', 780, 0, '¿Completa?', 'revisa la unidad'),
-      n('n5', 'paso', 1080, 0, 'Informe', 'responsable del servicio'),
-      n('n6', 'espera', 780, 220, 'Subsanación', '10 días hábiles'),
-      n('n7', 'decision', 1080, 220, '¿Favorable?', 'valora el informe'),
-      n('n8', 'documento', 1380, 220, 'Resolución', 'plantilla: concesión'),
-      n('n9', 'notificacion', 1380, 440, 'Notificar', 'persona interesada'),
-      n('n10', 'fin', 1380, 660, 'Concedido', 'alta en teletrabajo', { resultado: 'ok' }),
-      n('n11', 'documento', 1080, 440, 'Denegación', 'plantilla: denegatoria'),
-      n('n12', 'fin', 780, 440, 'Denegado', 'fin del procedimiento', { resultado: 'ko' }),
-    ],
+    nodes: nodos,
     edges: [
       e('n1', 'right', 'n2', 'left', 'normal'),
       e('n2', 'right', 'n3', 'left', 'normal', 'enviar'),
@@ -90,10 +146,10 @@ function esquemaEjemplo(): Esquema {
       e('n6', 'left', 'n3', 'bottom', 'alternativa', 'subsana'),
       e('n6', 'bottom', 'n12', 'top', 'error', 'no subsana'),
       e('n5', 'bottom', 'n7', 'top', 'normal'),
-      e('n7', 'right', 'n8', 'left', 'normal', 'sí'),
+      si,
       e('n8', 'bottom', 'n9', 'top', 'normal'),
       e('n9', 'bottom', 'n10', 'top', 'normal'),
-      e('n7', 'bottom', 'n11', 'top', 'error', 'no'),
+      no,
       e('n11', 'left', 'n12', 'right', 'error'),
     ],
   }

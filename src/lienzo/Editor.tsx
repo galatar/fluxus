@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, type DragEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type DragEvent } from 'react'
 import {
   addEdge,
   Background,
@@ -15,9 +15,14 @@ import {
 } from '@xyflow/react'
 import { limpiar, nuevoId } from '../almacen'
 import { ORDEN_TIPOS, TIPOS } from '../catalogo'
-import type { Conexion, Esquema, Nodo, NodoData, Tipo } from '../tipos'
+import { PLANTILLA_VACIA, variablesDe } from '../dominio'
+import { Dialogo } from '../editores/Dialogo'
+import { EditorCampos } from '../editores/EditorCampos'
+import { EditorPlantilla } from '../editores/EditorPlantilla'
+import { EditorRequisitos } from '../editores/EditorRequisitos'
+import type { Conexion, ConexionData, Esquema, Nodo, NodoData, Tipo } from '../tipos'
 import { ConexionFlujo, Flechas } from './ConexionFlujo'
-import { Inspector } from './Inspector'
+import { Inspector, type QueEditar } from './Inspector'
 import { Leyenda } from './Leyenda'
 import { NodoFlujo } from './NodoFlujo'
 
@@ -45,6 +50,8 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
   const { screenToFlowPosition } = useReactFlow()
   const envoltorio = useRef<HTMLDivElement>(null)
   const ultimoGuardado = useRef(JSON.stringify(limpiar(esquema.nodes, esquema.edges)))
+  const [dialogo, setDialogo] = useState<{ id: string; que: QueEditar } | null>(null)
+  const cerrarDialogo = useCallback(() => setDialogo(null), [])
 
   // Autoguardado: solo cuando cambia el contenido, no la selección.
   useEffect(() => {
@@ -92,7 +99,7 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
   )
 
   const actualizarConexion = useCallback(
-    (id: string, cambios: Partial<Conexion['data']>) =>
+    (id: string, cambios: Partial<ConexionData>) =>
       setEdges((es) => es.map((e) => (e.id === id ? { ...e, data: { tipo: 'normal', ...e.data, ...cambios } } : e))),
     [setEdges],
   )
@@ -105,9 +112,8 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
     [setNodes, setEdges],
   )
 
-  const nodosSel = nodes.filter((n) => n.selected)
-  const conexSel = edges.filter((e) => e.selected)
-  const haySeleccion = nodosSel.length + conexSel.length > 0
+  const haySeleccion = nodes.some((n) => n.selected) || edges.some((e) => e.selected)
+  const enDialogo = dialogo && nodes.find((n) => n.id === dialogo.id)
 
   return (
     <div className="editor" ref={envoltorio}>
@@ -125,7 +131,7 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
         colorMode={tema}
         snapToGrid
         snapGrid={[10, 10]}
-        deleteKeyCode={['Backspace', 'Delete']}
+        deleteKeyCode={dialogo ? null : ['Backspace', 'Delete']}
         onDragOver={(ev) => {
           ev.preventDefault()
           ev.dataTransfer.dropEffect = 'move'
@@ -163,7 +169,14 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
 
         {haySeleccion ? (
           <Panel position="top-right" className="panel inspector">
-            <Inspector nodos={nodosSel} conexiones={conexSel} onNodo={actualizarNodo} onConexion={actualizarConexion} onBorrar={borrar} />
+            <Inspector
+              nodos={nodes}
+              conexiones={edges}
+              onNodo={actualizarNodo}
+              onConexion={actualizarConexion}
+              onBorrar={borrar}
+              onAbrir={(id, que) => setDialogo({ id, que })}
+            />
           </Panel>
         ) : (
           <Panel position="top-right" className="pista">
@@ -177,6 +190,24 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
 
         <Controls position="bottom-right" showInteractive={false} />
       </ReactFlow>
+
+      {enDialogo && (
+        <Dialogo antetitulo={TIPOS[enDialogo.data.tipo].nombre} titulo={enDialogo.data.titulo} onCerrar={cerrarDialogo}>
+          {dialogo.que === 'campos' && (
+            <EditorCampos titulo={enDialogo.data.titulo} campos={enDialogo.data.campos ?? []} onCambio={(campos) => actualizarNodo(enDialogo.id, { campos })} />
+          )}
+          {dialogo.que === 'requisitos' && (
+            <EditorRequisitos titulo={enDialogo.data.titulo} docs={enDialogo.data.requisitos ?? []} onCambio={(requisitos) => actualizarNodo(enDialogo.id, { requisitos })} />
+          )}
+          {dialogo.que === 'plantilla' && (
+            <EditorPlantilla
+              plantilla={enDialogo.data.plantilla ?? PLANTILLA_VACIA}
+              variables={variablesDe(nodes)}
+              onCambio={(plantilla) => actualizarNodo(enDialogo.id, { plantilla })}
+            />
+          )}
+        </Dialogo>
+      )}
     </div>
   )
 }

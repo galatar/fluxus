@@ -1,10 +1,14 @@
-import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath, type EdgeProps } from '@xyflow/react'
-import type { Conexion, TipoConexion } from '../tipos'
+import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath, useNodes, type EdgeProps } from '@xyflow/react'
+import { textoCondicion, variablesDe } from '../dominio'
+import type { Conexion, Nodo, TipoConexion } from '../tipos'
 
 export function ConexionFlujo(props: EdgeProps<Conexion>) {
   const { id, data, selected } = props
   const tipo = data?.tipo ?? 'normal'
   const [path, x, y] = getSmoothStepPath({ ...props, borderRadius: 14, offset: 22 })
+  const nodos = useNodes<Nodo>()
+  // Sin etiqueta escrita a mano, mostramos la condición.
+  const etiqueta = data?.etiqueta || (data?.porDefecto ? 'en otro caso' : textoCondicion(data?.condicion, variablesDe(nodos)))
 
   return (
     <>
@@ -15,10 +19,10 @@ export function ConexionFlujo(props: EdgeProps<Conexion>) {
         className={`arista a-${tipo}${selected ? ' seleccionada' : ''}`}
         interactionWidth={18}
       />
-      {data?.etiqueta && (
+      {etiqueta && (
         <EdgeLabelRenderer>
           <div className={`etiqueta a-${tipo}`} style={{ transform: `translate(-50%, -50%) translate(${x}px, ${y}px)` }}>
-            {data.etiqueta}
+            {etiqueta}
           </div>
         </EdgeLabelRenderer>
       )}
