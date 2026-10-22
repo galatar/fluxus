@@ -1,7 +1,12 @@
 import { Handle, NodeResizer, Position, type NodeProps } from '@xyflow/react'
+import { CircleAlert, TriangleAlert } from 'lucide-react'
+import { createContext, useContext } from 'react'
 import { TIPOS } from '../catalogo'
 import { resumenNodo } from '../dominio'
 import type { Nodo } from '../tipos'
+
+/** Problemas por caja; solo se rellena mientras está abierta la revisión. */
+export const ProblemasContexto = createContext<Map<string, { nivel: 'error' | 'aviso'; textos: string[] }>>(new Map())
 
 const LADOS = [
   ['top', Position.Top],
@@ -10,7 +15,8 @@ const LADOS = [
   ['left', Position.Left],
 ] as const
 
-export function NodoFlujo({ data, selected }: NodeProps<Nodo>) {
+export function NodoFlujo({ id, data, selected }: NodeProps<Nodo>) {
+  const problema = useContext(ProblemasContexto).get(id)
   if (data.tipo === 'grupo') return <NodoGrupo titulo={data.titulo} selected={selected} />
   const Icono = TIPOS[data.tipo].icono
   const resumen = resumenNodo(data)
@@ -24,6 +30,11 @@ export function NodoFlujo({ data, selected }: NodeProps<Nodo>) {
       <div className="nodo-titulo">{data.titulo}</div>
       {data.detalle && <div className="nodo-detalle">{data.detalle}</div>}
       {resumen && <div className="nodo-resumen">{resumen}</div>}
+      {problema && (
+        <span className={`marca-problema ${problema.nivel}`} title={problema.textos.join('\n')}>
+          {problema.nivel === 'error' ? <CircleAlert size={14} /> : <TriangleAlert size={14} />}
+        </span>
+      )}
       {LADOS.map(([id, pos]) => (
         <Handle key={id} id={id} type="source" position={pos} className="asa" />
       ))}

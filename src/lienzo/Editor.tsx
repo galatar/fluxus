@@ -1,19 +1,20 @@
-import { useCallback, useEffect, useRef, useState, type DragEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
 import {
   addEdge,
   Background,
   BackgroundVariant,
   ConnectionMode,
-  Controls,
   Panel,
   ReactFlow,
   ReactFlowProvider,
   useEdgesState,
   useNodesState,
   useReactFlow,
+  ViewportPortal,
   type Connection,
   type NodeChange,
 } from '@xyflow/react'
+import { toPng, toSvg } from 'html-to-image'
 import { Rows3 } from 'lucide-react'
 import { aParrilla, limpiar, nuevoId, PARRILLA } from '../almacen'
 import { ORDEN_TIPOS, TIPOS } from '../catalogo'
@@ -23,13 +24,17 @@ import { EditorCampos } from '../editores/EditorCampos'
 import { EditorEstructura } from '../editores/EditorEstructura'
 import { EditorPlantilla } from '../editores/EditorPlantilla'
 import { EditorRequisitos } from '../editores/EditorRequisitos'
-import { ALTO_CARRIL, ANCHO_FASE, dentroDe, ESTRUCTURA_VACIA, primeraBanda, reubicar, type Eje } from '../estructura'
+import { ALTO_CARRIL, ANCHO_FASE, dentroDe, ESTRUCTURA_VACIA, limitesDibujo, primeraBanda, reubicar, type Eje } from '../estructura'
 import type { Banda, Conexion, ConexionData, Esquema, Estructura, Nodo, NodoData, Tipo } from '../tipos'
+import { revisar, type Problema } from '../validacion'
+import { Barra } from './Barra'
 import { Carriles } from './Carriles'
 import { ConexionFlujo, Flechas } from './ConexionFlujo'
 import { Inspector, type QueEditar } from './Inspector'
 import { Leyenda } from './Leyenda'
-import { NodoFlujo } from './NodoFlujo'
+import { LecturaContexto, resaltar, type ModoLectura } from './lectura'
+import { NodoFlujo, ProblemasContexto } from './NodoFlujo'
+import { Revision } from './Revision'
 
 const nodeTypes = { nodo: NodoFlujo }
 const edgeTypes = { conexion: ConexionFlujo }
@@ -55,11 +60,14 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Nodo>(esquema.nodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState<Conexion>(esquema.edges)
   const [estructura, setEstructura] = useState<Estructura>(esquema.estructura ?? ESTRUCTURA_VACIA)
-  const { screenToFlowPosition } = useReactFlow()
+  const { screenToFlowPosition, fitView } = useReactFlow()
   const envoltorio = useRef<HTMLDivElement>(null)
   const ultimoGuardado = useRef(JSON.stringify({ ...limpiar(esquema.nodes, esquema.edges), estructura: esquema.estructura ?? ESTRUCTURA_VACIA }))
   const [dialogo, setDialogo] = useState<EstadoDialogo | null>(null)
   const cerrarDialogo = useCallback(() => setDialogo(null), [])
+  const [modo, setModo] = useState<ModoLectura | null>(null)
+  const [encima, setEncima] = useState<string | null>(null)
+  const [revisando, setRevisando] = useState(false)
 
   // Copias siempre al día para los manejadores que se disparan muy seguido
   // (arrastrar bordes y grupos) antes de que React vuelva a pintar.
@@ -202,16 +210,88 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
 
   const abrirEstructura = useCallback(() => setDialogo({ que: 'estructura' }), [])
 
+  // --- Revisión -------------------------------------------------------------
+
+  const problemas = useMemo(() => revisar(nodes, edges), [nodes, edges])
+  const problemasPorCaja = useMemo(() => {
+    const m = new Map<string, { nivel: Problema['nivel']; textos: string[] }>()
+    if (!revisando) return m
+    for (const p of problemas) {
+      const id = p.nodo ?? edges.find((e) => e.id === p.conexion)?.source
+      if (!id) continue
+      const previo = m.get(id)
+      m.set(id, { nivel: previo?.nivel === 'error' || p.nivel === 'error' ? 'error' : 'aviso', textos: [...(previo?.textos ?? []), p.texto] })
+    }
+    return m
+  }, [problemas, revisando, edges])
+
+  const irA = (p: Problema) => {
+    const id = p.nodo ?? edges.find((e) => e.id === p.conexion)?.source
+    setNodes((ns) => ns.map((n) => ({ ...n, selected: !p.conexion && n.id === id })))
+    setEdges((es) => es.map((e) => ({ ...e, selected: e.id === p.conexion })))
+    if (id) fitView({ nodes: [{ id }], duration: 300, maxZoom: 1, padding: 1.5 })
+  }
+
+  // --- Modo lectura ---------------------------------------------------------
+
+  const elegidos = nodes.filter((n) => n.selected && n.data.tipo !== 'grupo').map((n) => n.id)
+  const desde = (elegidos.length ? elegidos : encima ? [encima] : []).join(' ')
+  const luz = useMemo(() => (modo && desde ? resaltar(modo, desde.split(' '), edges) : null), [modo, desde, edges])
+  const nodosVista = useMemo(
+    () => (luz ? nodes.map((n) => (n.data.tipo === 'grupo' || luz.nodos.has(n.id) ? n : { ...n, className: 'atenuado' })) : nodes),
+    [nodes, luz],
+  )
+  const conexionesVista = useMemo(
+    () => (luz ? edges.map((e) => ({ ...e, className: luz.conexiones.has(e.id) ? 'iluminada' : 'atenuado' })) : edges),
+    [edges, luz],
+  )
+
+  // --- Imagen ---------------------------------------------------------------
+
+  const exportarImagen = async (formato: 'png' | 'svg') => {
+    if (nodes.length === 0) return
+    const vista = envoltorio.current?.querySelector<HTMLElement>('.react-flow__viewport')
+    if (!vista) return
+    const r = limitesDibujo(nodes, estructura)
+    const margen = 40
+    const ancho = Math.ceil(r.x2 - r.x1 + 2 * margen)
+    const alto = Math.ceil(r.y2 - r.y1 + 2 * margen)
+    const opciones = {
+      backgroundColor: getComputedStyle(document.body).backgroundColor,
+      width: ancho,
+      height: alto,
+      pixelRatio: 2,
+      style: { width: `${ancho}px`, height: `${alto}px`, transform: `translate(${margen - r.x1}px, ${margen - r.y1}px) scale(1)` },
+      // Fuera los tiradores de conexión y de tamaño.
+      filter: (n: HTMLElement) => !n.classList?.contains('react-flow__handle') && !n.classList?.contains('react-flow__resize-control'),
+    }
+    // Sin selección, atenuados ni marcas de revisión: la imagen sale limpia.
+    envoltorio.current!.classList.add('exportando')
+    let url: string
+    try {
+      url = formato === 'png' ? await toPng(vista, opciones) : await toSvg(vista, opciones)
+    } finally {
+      envoltorio.current!.classList.remove('exportando')
+    }
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${esquema.nombre.replace(/[^\p{L}\p{N}]+/gu, '-').toLowerCase() || 'esquema'}.${formato}`
+    a.click()
+  }
+
   const haySeleccion = nodes.some((n) => n.selected) || edges.some((e) => e.selected)
   const enDialogo = dialogo && dialogo.que !== 'estructura' ? nodes.find((n) => n.id === dialogo.id) : undefined
 
   return (
     <div className="editor" ref={envoltorio}>
-      <Flechas />
+      <ProblemasContexto.Provider value={problemasPorCaja}>
+      <LecturaContexto.Provider value={luz?.conexiones ?? null}>
       <ReactFlow
-        nodes={nodes}
-        edges={edges}
+        nodes={nodosVista}
+        edges={conexionesVista}
         onNodesChange={alMoverNodos}
+        onNodeMouseEnter={(_, n) => setEncima(n.id)}
+        onNodeMouseLeave={() => setEncima(null)}
         onNodeDragStart={(_, __, arrastrados) => {
           for (const g of arrastrados.filter((n) => n.data.tipo === 'grupo')) {
             contenidoGrupos.current.set(g.id, dentroDe(g, nodosRef.current).map((n) => n.id))
@@ -237,6 +317,10 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
         fitViewOptions={{ padding: { top: '90px', right: '40px', bottom: '110px', left: '260px' }, maxZoom: 1 }}
       >
         <Background variant={BackgroundVariant.Dots} gap={PARRILLA} size={1.4} color="var(--punto)" />
+        {/* Las puntas de flecha van dentro del lienzo para que salgan al exportar la imagen. */}
+        <ViewportPortal>
+          <Flechas />
+        </ViewportPortal>
         <Carriles estructura={estructura} nodos={nodes} onTamano={cambiarTamano} onAbrir={abrirEstructura} />
 
         <Panel position="top-left" className="panel paleta">
@@ -293,8 +377,26 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
           <Leyenda nodos={nodes} conexiones={edges} />
         </Panel>
 
-        <Controls position="bottom-right" showInteractive={false} />
+        {revisando && (
+          <Panel position="bottom-right" className="panel revision">
+            <Revision problemas={problemas} onIr={irA} onCerrar={() => setRevisando(false)} />
+          </Panel>
+        )}
+
+        <Panel position="bottom-right" className="panel-barra">
+          <Barra
+            modo={modo}
+            onModo={setModo}
+            revisando={revisando}
+            onRevisar={() => setRevisando((r) => !r)}
+            errores={problemas.filter((p) => p.nivel === 'error').length}
+            avisos={problemas.filter((p) => p.nivel === 'aviso').length}
+            onImagen={exportarImagen}
+          />
+        </Panel>
       </ReactFlow>
+      </LecturaContexto.Provider>
+      </ProblemasContexto.Provider>
 
       {dialogo?.que === 'estructura' && (
         <Dialogo antetitulo="Esquema" titulo="Carriles y fases" onCerrar={cerrarDialogo}>

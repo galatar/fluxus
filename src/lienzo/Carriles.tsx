@@ -1,11 +1,8 @@
 import { useReactFlow, ViewportPortal } from '@xyflow/react'
 import type { PointerEvent } from 'react'
 import { aParrilla } from '../almacen'
-import { contenido, MIN_BANDA, tramos, type Eje } from '../estructura'
+import { CABECERA_FASE as CABECERA, MARGEN_CARRIL as MARGEN, marco, MIN_BANDA, tramos, type Eje } from '../estructura'
 import type { Estructura, Nodo } from '../tipos'
-
-const MARGEN = 60 // espacio para el nombre del carril, a la izquierda
-const CABECERA = 44 // alto de la cabecera de las fases
 
 /** Color de cada fase, por turnos. */
 const COLORES_FASE = ['--c-documento', '--c-formulario', '--c-espera', '--c-decision', '--c-paso']
@@ -23,16 +20,9 @@ export function Carriles({ estructura, nodos, onTamano, onAbrir }: Props) {
   const { carriles, fases, x0, y0 } = estructura
   if (carriles.length === 0 && fases.length === 0) return null
 
-  const c = contenido(nodos) ?? { x1: x0, y1: y0, x2: x0 + 600, y2: y0 + 240 }
   const tc = tramos(y0, carriles)
   const tf = tramos(x0, fases)
-  const finFases = tf.at(-1)?.fin ?? -Infinity
-  const finCarriles = tc.at(-1)?.fin ?? -Infinity
-
-  const izquierda = Math.min(fases.length ? x0 : Infinity, c.x1 - 40) - (carriles.length ? MARGEN : 0)
-  const derecha = Math.max(finFases, c.x2 + 60)
-  const arriba = carriles.length ? y0 : c.y1 - 40
-  const abajo = Math.max(finCarriles, c.y2 + 40)
+  const { izquierda, derecha, arriba, abajo } = marco(estructura, nodos)
 
   // Arrastrar el borde de un carril o de una fase cambia su tamaño.
   const arrastrar = (eje: Eje, i: number, tamano0: number) => (ev: PointerEvent<HTMLDivElement>) => {

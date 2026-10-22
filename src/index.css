@@ -535,7 +535,8 @@ textarea {
 .a-alternativa { --a: var(--a-alternativa); }
 .a-error { --a: var(--a-error); }
 
-.react-flow__edge-path.arista {
+.react-flow__edge .react-flow__edge-path.arista {
+  /* Más específico que .react-flow__edge.selected, que la pintaba de gris. */
   stroke: var(--a);
   stroke-width: 2;
 }
@@ -574,7 +575,7 @@ textarea {
 /* --- Leyenda ------------------------------------------------------------- */
 
 .leyenda {
-  max-width: calc(100% - 140px);
+  max-width: calc(100% - 640px);
   padding: 6px 4px;
 }
 .leyenda-titulo {
@@ -1081,4 +1082,196 @@ mark.variable.desconocida {
 .tarjeta.tarjeta-fila {
   flex-direction: row;
   align-items: flex-end;
+}
+
+/* --- Lectura, revisión e imagen (paso 4) --------------------------------- */
+
+.panel-barra {
+  margin: 12px;
+}
+.barra {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 5px;
+  background: color-mix(in srgb, var(--superficie) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  box-shadow: var(--sombra);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.barra button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 9px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--texto-2);
+  cursor: pointer;
+  text-transform: inherit;
+  letter-spacing: inherit;
+}
+.barra button:hover {
+  background: var(--superficie-2);
+  color: var(--texto);
+}
+.barra button.activo {
+  background: color-mix(in srgb, var(--acento) 14%, transparent);
+  color: var(--acento);
+}
+.barra-sep {
+  width: 1px;
+  height: 18px;
+  margin: 0 4px;
+  background: var(--borde);
+}
+.zoom {
+  min-width: 44px;
+  text-align: center;
+  color: var(--texto-2);
+}
+.insignia {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--c-espera);
+  color: #fff;
+  font-size: 10px;
+  letter-spacing: 0;
+}
+.insignia.error {
+  background: var(--c-ko);
+}
+:root[data-theme='dark'] .insignia {
+  color: #111;
+}
+
+.react-flow__panel.revision {
+  bottom: 58px;
+  width: 360px;
+  max-height: calc(100% - 140px);
+  overflow-y: auto;
+}
+.revision-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.cerrar {
+  border: 0;
+  background: none;
+  color: var(--texto-3);
+  cursor: pointer;
+  padding: 2px;
+}
+.todo-bien {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--c-ok);
+  font-size: 13px;
+}
+.problemas {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.problemas button {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  text-align: left;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--texto);
+  cursor: pointer;
+}
+.problemas button:hover:not(:disabled) {
+  background: var(--superficie-2);
+}
+.problemas button:disabled {
+  cursor: default;
+}
+.problemas svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.problemas .error svg {
+  color: var(--c-ko);
+}
+.problemas .aviso svg {
+  color: var(--c-espera);
+}
+
+.marca-problema {
+  position: absolute;
+  top: -9px;
+  right: -9px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--superficie);
+  box-shadow: var(--sombra);
+}
+.marca-problema.error {
+  color: var(--c-ko);
+}
+.marca-problema.aviso {
+  color: var(--c-espera);
+}
+
+/* Modo lectura: lo que no está en el camino o en el foco se apaga. */
+.react-flow__node.atenuado {
+  opacity: 0.22;
+  filter: saturate(0.4);
+  transition: opacity 0.2s;
+}
+.react-flow__edge.atenuado {
+  opacity: 0.12;
+}
+.react-flow__edge.iluminada .arista {
+  stroke-width: 2.6;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--a) 55%, transparent));
+}
+.etiqueta.atenuado {
+  opacity: 0.15;
+}
+.exportando .marca-problema {
+  display: none;
+}
+.exportando .react-flow__node.atenuado,
+.exportando .react-flow__edge.atenuado,
+.exportando .etiqueta.atenuado {
+  opacity: 1;
+  filter: none;
+}
+.exportando .nodo.seleccionado {
+  box-shadow: var(--sombra);
+}
+.exportando .react-flow__edge-path.arista.seleccionada,
+.exportando .react-flow__edge.iluminada .arista {
+  stroke-width: 2;
+  filter: none;
+}
+.exportando .grupo.seleccionado {
+  border-color: var(--texto-3);
 }

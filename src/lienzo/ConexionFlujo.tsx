@@ -1,5 +1,7 @@
 import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath, useNodes, type EdgeProps } from '@xyflow/react'
+import { useContext } from 'react'
 import { textoCondicion, variablesDe } from '../dominio'
+import { LecturaContexto } from './lectura'
 import type { Conexion, Nodo, TipoConexion } from '../tipos'
 
 export function ConexionFlujo(props: EdgeProps<Conexion>) {
@@ -7,6 +9,7 @@ export function ConexionFlujo(props: EdgeProps<Conexion>) {
   const tipo = data?.tipo ?? 'normal'
   const [path, x, y] = getSmoothStepPath({ ...props, borderRadius: 14, offset: 22 })
   const nodos = useNodes<Nodo>()
+  const iluminadas = useContext(LecturaContexto)
   // Sin etiqueta escrita a mano, mostramos la condición.
   const etiqueta = data?.etiqueta || (data?.porDefecto ? 'en otro caso' : textoCondicion(data?.condicion, variablesDe(nodos)))
 
@@ -21,7 +24,7 @@ export function ConexionFlujo(props: EdgeProps<Conexion>) {
       />
       {etiqueta && (
         <EdgeLabelRenderer>
-          <div className={`etiqueta a-${tipo}`} style={{ transform: `translate(-50%, -50%) translate(${x}px, ${y}px)` }}>
+          <div className={`etiqueta a-${tipo}${iluminadas && !iluminadas.has(id) ? ' atenuado' : ''}`} style={{ transform: `translate(-50%, -50%) translate(${x}px, ${y}px)` }}>
             {etiqueta}
           </div>
         </EdgeLabelRenderer>
@@ -38,7 +41,7 @@ export function Flechas() {
     <svg className="defs-flechas" aria-hidden>
       <defs>
         {TIPOS_FLECHA.map((t) => (
-          <marker key={t} id={`flecha-${t}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <marker key={t} id={`flecha-${t}`} viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" orient="auto-start-reverse">
             <path d="M0,0 L10,5 L0,10 z" className={`punta a-${t}`} />
           </marker>
         ))}

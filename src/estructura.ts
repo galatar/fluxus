@@ -7,6 +7,10 @@ export const ESTRUCTURA_VACIA: Estructura = { carriles: [], y0: 0, fases: [], x0
 export const ALTO_CARRIL = 240
 export const ANCHO_FASE = 600
 export const MIN_BANDA = 120
+/** Espacio para el nombre del carril, a la izquierda. */
+export const MARGEN_CARRIL = 60
+/** Alto de la cabecera de las fases. */
+export const CABECERA_FASE = 44
 
 /** Rectángulo de una caja en coordenadas del lienzo (las cajas se colocan por su centro). */
 export function caja(n: Nodo) {
@@ -86,4 +90,37 @@ export function primeraBanda(nodos: Nodo[], eje: Eje) {
   const [a, b] = eje === 'y' ? [c.y1, c.y2] : [c.x1, c.x2]
   const origen = aParrilla(a - 60)
   return { origen, tamano: Math.max(defecto, aParrilla(b + 60 - origen)) }
+}
+
+/** Rectángulo que ocupan los carriles y las fases (sin la cabecera de fases). */
+export function marco(estructura: Estructura, nodos: Nodo[]) {
+  const { carriles, fases, x0, y0 } = estructura
+  const c = contenido(nodos) ?? { x1: x0, y1: y0, x2: x0 + ANCHO_FASE, y2: y0 + ALTO_CARRIL }
+  const finFases = tramos(x0, fases).at(-1)?.fin ?? -Infinity
+  const finCarriles = tramos(y0, carriles).at(-1)?.fin ?? -Infinity
+  return {
+    izquierda: Math.min(fases.length ? x0 : Infinity, c.x1 - 40) - (carriles.length ? MARGEN_CARRIL : 0),
+    derecha: Math.max(finFases, c.x2 + 60),
+    arriba: carriles.length ? y0 : c.y1 - 40,
+    abajo: Math.max(finCarriles, c.y2 + 40),
+  }
+}
+
+/** Todo lo dibujado (cajas, grupos, carriles y fases), para exportar la imagen. */
+export function limitesDibujo(nodos: Nodo[], estructura: Estructura) {
+  const cajas = nodos.map(caja)
+  const r = {
+    x1: Math.min(...cajas.map((c) => c.x1)),
+    y1: Math.min(...cajas.map((c) => c.y1)) - 24, // título de los grupos
+    x2: Math.max(...cajas.map((c) => c.x2)),
+    y2: Math.max(...cajas.map((c) => c.y2)),
+  }
+  if (estructura.carriles.length || estructura.fases.length) {
+    const m = marco(estructura, nodos)
+    r.x1 = Math.min(r.x1, m.izquierda)
+    r.x2 = Math.max(r.x2, m.derecha)
+    r.y1 = Math.min(r.y1, m.arriba - (estructura.fases.length ? CABECERA_FASE : 0))
+    r.y2 = Math.max(r.y2, m.abajo)
+  }
+  return r
 }
