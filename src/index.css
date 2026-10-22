@@ -1,0 +1,604 @@
+/* Paleta inspirada en los esquemas de archify: fondo de puntos, cajas con
+   borde de color y relleno tenue, tipografía monoespaciada. */
+
+:root {
+  --mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  --fondo: #f6f8fa;
+  --punto: #d3dae2;
+  --superficie: #ffffff;
+  --superficie-2: #f1f4f7;
+  --borde: #e2e7ed;
+  --texto: #111827;
+  --texto-2: #5b6474;
+  --texto-3: #98a2b3;
+  --relleno-base: #ffffff;
+  --mezcla: 11%;
+  --sombra: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 14px rgba(15, 23, 42, 0.05);
+
+  --c-inicio: #15803d;
+  --c-paso: #0e7490;
+  --c-formulario: #2563eb;
+  --c-aportado: #c026d3;
+  --c-documento: #047857;
+  --c-decision: #7c3aed;
+  --c-espera: #c2410c;
+  --c-notificacion: #a16207;
+  --c-sistema: #64748b;
+  --c-ok: #15803d;
+  --c-ko: #dc2626;
+
+  --a-normal: #3f8f6b;
+  --a-alternativa: #7c3aed;
+  --a-error: #dc2f4a;
+  --acento: #059669;
+}
+
+:root[data-theme='dark'] {
+  --fondo: #070d1a;
+  --punto: #1b2638;
+  --superficie: #0d1526;
+  --superficie-2: #111c31;
+  --borde: #1f2d44;
+  --texto: #f1f5fb;
+  --texto-2: #9eb0c7;
+  --texto-3: #5b6e87;
+  --relleno-base: #0b1322;
+  --mezcla: 16%;
+  --sombra: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 18px rgba(0, 0, 0, 0.25);
+
+  --c-inicio: #4ade80;
+  --c-paso: #67e8f9;
+  --c-formulario: #93b4fd;
+  --c-aportado: #f0abfc;
+  --c-documento: #5eead4;
+  --c-decision: #c4b5fd;
+  --c-espera: #fdba74;
+  --c-notificacion: #fde047;
+  --c-sistema: #a5b4c7;
+  --c-ok: #4ade80;
+  --c-ko: #fb7185;
+
+  --a-normal: #5eead4;
+  --a-alternativa: #a78bfa;
+  --a-error: #fb7185;
+  --acento: #2dd4bf;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: var(--sans);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* --- Estructura ---------------------------------------------------------- */
+
+.app {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  height: 100%;
+}
+
+.lateral {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 12px;
+  background: var(--superficie);
+  border-right: 1px solid var(--borde);
+  min-height: 0;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px 6px;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--acento);
+}
+.marca span {
+  color: var(--texto);
+}
+
+.lista-titulo,
+.panel-titulo,
+.leyenda-titulo {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--texto-3);
+}
+.lista-titulo {
+  padding: 8px 6px 0;
+}
+
+.lista {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.esquema-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.esquema-item:hover {
+  background: var(--superficie-2);
+}
+.esquema-item.activo {
+  background: var(--superficie-2);
+  border-color: var(--borde);
+}
+.esquema-item .num {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--texto-3);
+}
+.esquema-item.activo .num {
+  color: var(--acento);
+}
+.esquema-texto {
+  flex: 1;
+  min-width: 0;
+}
+.esquema-nombre {
+  font-weight: 550;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.esquema-meta {
+  font-size: 11px;
+  color: var(--texto-3);
+}
+.acciones {
+  display: none;
+  gap: 2px;
+}
+.esquema-item:hover .acciones {
+  display: flex;
+}
+.acciones button {
+  border: 0;
+  background: none;
+  padding: 4px;
+  border-radius: 5px;
+  color: var(--texto-2);
+  cursor: pointer;
+}
+.acciones button:hover {
+  background: var(--borde);
+  color: var(--texto);
+}
+
+.pie {
+  display: flex;
+  gap: 6px;
+}
+.pie .boton:first-child {
+  flex: 1;
+}
+
+.principal {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.cabecera {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--borde);
+  background: var(--superficie);
+}
+.cabecera input {
+  border: 1px solid transparent;
+  background: none;
+  border-radius: 6px;
+  padding: 5px 8px;
+  outline: none;
+}
+.cabecera input:hover,
+.cabecera input:focus {
+  border-color: var(--borde);
+}
+.cabecera .nombre {
+  font-family: var(--mono);
+  font-weight: 650;
+  font-size: 15px;
+  width: 300px;
+}
+.cabecera .descripcion {
+  flex: 1;
+  color: var(--texto-2);
+}
+
+.vacio {
+  margin: auto;
+  text-align: center;
+  color: var(--texto-2);
+}
+
+/* --- Botones y formularios ----------------------------------------------- */
+
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 11px;
+  border-radius: 7px;
+  border: 1px solid var(--borde);
+  background: var(--superficie);
+  cursor: pointer;
+  font-size: 13px;
+}
+.boton:hover {
+  background: var(--superficie-2);
+}
+.boton.primario {
+  background: var(--acento);
+  border-color: var(--acento);
+  color: #fff;
+  font-weight: 550;
+}
+:root[data-theme='dark'] .boton.primario {
+  color: #04211b;
+}
+.boton.primario:hover {
+  filter: brightness(1.08);
+}
+.boton.peligro {
+  color: var(--c-ko);
+  margin-top: 4px;
+}
+
+.panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--texto-2);
+}
+.panel input,
+.panel select,
+.panel textarea {
+  padding: 7px 9px;
+  border-radius: 7px;
+  border: 1px solid var(--borde);
+  background: var(--relleno-base);
+  color: var(--texto);
+  font-size: 13px;
+  outline: none;
+  resize: vertical;
+}
+.panel input:focus,
+.panel select:focus,
+.panel textarea:focus {
+  border-color: var(--acento);
+}
+.ayuda {
+  margin: -4px 0 0;
+  font-size: 12px;
+  color: var(--texto-3);
+}
+.pista {
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--texto-3);
+  background: color-mix(in srgb, var(--superficie) 85%, transparent);
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+}
+
+/* --- Lienzo -------------------------------------------------------------- */
+
+.editor {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.react-flow {
+  --xy-background-color: var(--fondo);
+  --xy-node-border-radius: 10px;
+  --xy-controls-button-background-color: var(--superficie);
+  --xy-controls-button-background-color-hover: var(--superficie-2);
+  --xy-controls-button-color: var(--texto-2);
+  --xy-controls-button-border-color: var(--borde);
+  --xy-selection-background-color: color-mix(in srgb, var(--acento) 8%, transparent);
+  --xy-selection-border: 1px dashed var(--acento);
+}
+.react-flow__controls {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--sombra);
+}
+
+.defs-flechas {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: color-mix(in srgb, var(--superficie) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  box-shadow: var(--sombra);
+}
+
+.paleta {
+  gap: 2px;
+  padding: 12px 8px;
+  width: 168px;
+}
+.paleta .panel-titulo {
+  padding: 0 6px 6px;
+}
+.paleta-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  cursor: grab;
+  font-size: 13px;
+  text-align: left;
+}
+.paleta-item:hover {
+  background: var(--superficie-2);
+}
+.muestra,
+.muestra-caja {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1.5px solid var(--c);
+  background: var(--relleno);
+  color: var(--c);
+}
+.muestra-caja {
+  width: 18px;
+  height: 13px;
+  border-radius: 4px;
+}
+
+.inspector {
+  width: 280px;
+  max-height: calc(100% - 30px);
+  overflow-y: auto;
+}
+
+/* Color por tipo: cada tipo define --c y el relleno se mezcla con el fondo. */
+.t-inicio { --c: var(--c-inicio); }
+.t-paso { --c: var(--c-paso); }
+.t-formulario { --c: var(--c-formulario); }
+.t-aportado { --c: var(--c-aportado); }
+.t-documento { --c: var(--c-documento); }
+.t-decision { --c: var(--c-decision); }
+.t-espera { --c: var(--c-espera); }
+.t-notificacion { --c: var(--c-notificacion); }
+.t-sistema { --c: var(--c-sistema); }
+.t-fin { --c: var(--c-ok); }
+.t-fin.fin-ko { --c: var(--c-ko); }
+/* Solo las cajas usan el relleno; --c lo pone la clase t-* */
+.nodo,
+.muestra,
+.muestra-caja {
+  --relleno: color-mix(in srgb, var(--c) var(--mezcla), var(--relleno-base));
+}
+
+/* --- Nodos --------------------------------------------------------------- */
+
+.nodo {
+  position: relative;
+  width: 220px;
+  min-height: 74px;
+  padding: 16px 18px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  font-family: var(--mono);
+  background: var(--relleno);
+  border: 2px solid var(--c);
+  border-radius: 10px;
+  box-shadow: var(--sombra);
+  transition: box-shadow 0.15s;
+}
+.nodo.seleccionado {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 22%, transparent), var(--sombra);
+}
+.nodo-icono {
+  position: absolute;
+  top: 9px;
+  left: 10px;
+  color: var(--c);
+}
+.nodo-titulo {
+  font-weight: 650;
+  font-size: 14px;
+  color: var(--texto);
+  line-height: 1.25;
+}
+.nodo-detalle {
+  font-size: 11px;
+  color: var(--texto-2);
+  line-height: 1.3;
+}
+
+.nodo.t-inicio {
+  width: 130px;
+  min-height: 52px;
+  padding: 10px 14px 10px 26px;
+  border-radius: 999px;
+}
+.nodo.t-inicio .nodo-icono {
+  top: 50%;
+  translate: 0 -50%;
+  left: 12px;
+}
+.nodo.t-inicio .nodo-titulo {
+  font-size: 13px;
+}
+.nodo.t-inicio .nodo-detalle {
+  display: none;
+}
+
+.nodo.t-decision {
+  border-style: solid;
+  border-radius: 18px;
+}
+.nodo.t-fin {
+  outline: 2px solid var(--c);
+  outline-offset: 3px;
+  border-width: 1.5px;
+}
+.nodo.t-espera {
+  border-style: dashed;
+}
+
+/* Asas de conexión: invisibles hasta pasar por encima. */
+.asa.react-flow__handle {
+  width: 9px;
+  height: 9px;
+  background: var(--superficie);
+  border: 2px solid var(--c);
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.nodo:hover .asa,
+.nodo.seleccionado .asa,
+.react-flow__node.connectingfrom .asa {
+  opacity: 1;
+}
+
+/* --- Aristas ------------------------------------------------------------- */
+
+.a-normal { --a: var(--a-normal); }
+.a-alternativa { --a: var(--a-alternativa); }
+.a-error { --a: var(--a-error); }
+
+.react-flow__edge-path.arista {
+  stroke: var(--a);
+  stroke-width: 2;
+}
+.arista.a-alternativa,
+.arista.a-error,
+.leyenda-item .a-alternativa .linea,
+.leyenda-item .a-error .linea {
+  stroke-dasharray: 6 5;
+}
+.react-flow__edge-path.arista.seleccionada {
+  stroke-width: 3;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--a) 60%, transparent));
+}
+.punta {
+  fill: var(--a);
+}
+.react-flow__connection-path {
+  stroke: var(--acento);
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+}
+
+.etiqueta {
+  position: absolute;
+  padding: 2px 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--a);
+  background: var(--fondo);
+  border: 1px solid color-mix(in srgb, var(--a) 40%, transparent);
+  border-radius: 999px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* --- Leyenda ------------------------------------------------------------- */
+
+.leyenda {
+  max-width: calc(100% - 140px);
+  padding: 6px 4px;
+}
+.leyenda-titulo {
+  margin-bottom: 8px;
+  color: var(--texto);
+  font-weight: 650;
+}
+.leyenda-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--texto-2);
+}
+.leyenda-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.leyenda-item .linea {
+  stroke: var(--a);
+  stroke-width: 2;
+}
+.contador {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  border: 1px solid var(--borde);
+  font-size: 10px;
+  color: var(--texto-2);
+}
