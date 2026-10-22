@@ -2,6 +2,26 @@ import type { Campo, Conexion, Esquema, Nodo, TipoConexion } from './tipos'
 
 const CLAVE = 'flujus:esquemas'
 
+/** La parrilla coincide con los puntos del fondo. */
+export const PARRILLA = 20
+export const aParrilla = (v: number) => Math.round(v / PARRILLA) * PARRILLA
+
+/**
+ * v1 guardaba la esquina superior izquierda de cada caja; v2 guarda su centro,
+ * así dos cajas de distinta altura en la misma fila quedan a la misma altura
+ * y la flecha sale recta.
+ */
+const VERSION = 2
+
+function migrar(e: Esquema): Esquema {
+  if ((e.version ?? 1) >= VERSION) return e
+  const nodes = e.nodes.map((n) => {
+    const [ancho, alto] = n.data.tipo === 'inicio' ? [130, 52] : [220, 74]
+    return { ...n, position: { x: aParrilla(n.position.x + ancho / 2), y: aParrilla(n.position.y + alto / 2) } }
+  })
+  return { ...e, nodes, version: VERSION }
+}
+
 export const nuevoId = () => crypto.randomUUID()
 
 const ahora = () => new Date().toISOString()
@@ -9,7 +29,7 @@ const ahora = () => new Date().toISOString()
 export function cargarEsquemas(): Esquema[] {
   try {
     const crudo = localStorage.getItem(CLAVE)
-    if (crudo) return JSON.parse(crudo) as Esquema[]
+    if (crudo) return (JSON.parse(crudo) as Esquema[]).map(migrar)
   } catch {
     // Datos corruptos o almacenamiento bloqueado: empezamos con el ejemplo.
   }
@@ -25,7 +45,7 @@ export function guardarEsquemas(esquemas: Esquema[]) {
 }
 
 export function esquemaVacio(nombre = 'Nuevo esquema'): Esquema {
-  return { id: nuevoId(), nombre, descripcion: '', creado: ahora(), actualizado: ahora(), nodes: [], edges: [] }
+  return { id: nuevoId(), version: VERSION, nombre, descripcion: '', creado: ahora(), actualizado: ahora(), nodes: [], edges: [] }
 }
 
 /** Quita el estado de interfaz (selección, medidas) antes de guardar. */
@@ -50,7 +70,7 @@ export function exportar(esquema: Esquema) {
 export async function importar(fichero: File): Promise<Esquema> {
   const datos = JSON.parse(await fichero.text()) as Esquema
   if (!Array.isArray(datos.nodes) || !Array.isArray(datos.edges)) throw new Error('El fichero no es un esquema de Flujus')
-  return { ...datos, id: nuevoId(), actualizado: ahora() }
+  return migrar({ ...datos, id: nuevoId(), actualizado: ahora() })
 }
 
 // --- Ejemplo inicial -------------------------------------------------------
@@ -92,8 +112,8 @@ Denegar la solicitud de teletrabajo.`
 
 export function esquemaEjemplo(): Esquema {
   const nodos = [
-    n('n1', 'inicio', 0, 18, 'Inicio', 'persona solicitante'),
-    n('n2', 'formulario', 180, 0, 'Solicitud', 'datos + horario propuesto', {
+    n('n1', 'inicio', 60, 40, 'Inicio', 'persona solicitante'),
+    n('n2', 'formulario', 300, 40, 'Solicitud', 'datos + horario propuesto', {
       campos: [
         campo('nombre_completo', 'Nombre y apellidos', 'texto'),
         campo('dni', 'DNI', 'dni'),
@@ -103,30 +123,30 @@ export function esquemaEjemplo(): Esquema {
         campo('horario_propuesto', 'Horario propuesto', 'parrafo', false),
       ],
     }),
-    n('n3', 'aportado', 480, 0, 'Plan de trabajo', 'firmado por la persona', {
+    n('n3', 'aportado', 600, 40, 'Plan de trabajo', 'firmado por la persona', {
       requisitos: [
         { id: 'd1', nombre: 'Plan de trabajo', obligatorio: true, formato: 'pdf', firmado: true },
         { id: 'd2', nombre: 'Autoevaluación del puesto', obligatorio: false, formato: 'pdf', firmado: false, notas: 'modelo de la web del PTGAS' },
       ],
     }),
-    n('n4', 'decision', 780, 0, '¿Completa?', 'revisa la unidad'),
-    n('n5', 'paso', 1080, 0, 'Informe', 'responsable del servicio', {
+    n('n4', 'decision', 900, 40, '¿Completa?', 'revisa la unidad'),
+    n('n5', 'paso', 1200, 40, 'Informe', 'responsable del servicio', {
       campos: [
         campo('sentido_informe', 'Sentido del informe', 'lista', true, 'Favorable\nDesfavorable'),
         campo('observaciones', 'Observaciones', 'parrafo', false),
       ],
     }),
-    n('n6', 'espera', 780, 220, 'Subsanación', '10 días hábiles'),
-    n('n7', 'decision', 1080, 220, '¿Favorable?', 'valora el informe'),
-    n('n8', 'documento', 1380, 220, 'Resolución', 'plantilla: concesión', {
+    n('n6', 'espera', 900, 260, 'Subsanación', '10 días hábiles'),
+    n('n7', 'decision', 1200, 260, '¿Favorable?', 'valora el informe'),
+    n('n8', 'documento', 1500, 260, 'Resolución', 'plantilla: concesión', {
       plantilla: { formato: 'pdf', nombreFichero: '{{numero_expediente}}-concesion', cuerpo: RESOLUCION },
     }),
-    n('n9', 'notificacion', 1380, 440, 'Notificar', 'persona interesada'),
-    n('n10', 'fin', 1380, 660, 'Concedido', 'alta en teletrabajo', { resultado: 'ok' }),
-    n('n11', 'documento', 1080, 440, 'Denegación', 'plantilla: denegatoria', {
+    n('n9', 'notificacion', 1500, 480, 'Notificar', 'persona interesada'),
+    n('n10', 'fin', 1500, 700, 'Concedido', 'alta en teletrabajo', { resultado: 'ok' }),
+    n('n11', 'documento', 1200, 480, 'Denegación', 'plantilla: denegatoria', {
       plantilla: { formato: 'pdf', nombreFichero: '{{numero_expediente}}-denegacion', cuerpo: DENEGACION },
     }),
-    n('n12', 'fin', 780, 440, 'Denegado', 'fin del procedimiento', { resultado: 'ko' }),
+    n('n12', 'fin', 900, 480, 'Denegado', 'fin del procedimiento', { resultado: 'ko' }),
   ]
   const si = e('n7', 'right', 'n8', 'left', 'normal', 'sí')
   si.data!.condicion = { campo: 'sentido_informe', operador: 'igual', valor: 'Favorable' }

@@ -13,7 +13,7 @@ import {
   useReactFlow,
   type Connection,
 } from '@xyflow/react'
-import { limpiar, nuevoId } from '../almacen'
+import { aParrilla, limpiar, nuevoId, PARRILLA } from '../almacen'
 import { ORDEN_TIPOS, TIPOS } from '../catalogo'
 import { PLANTILLA_VACIA, variablesDe } from '../dominio'
 import { Dialogo } from '../editores/Dialogo'
@@ -74,7 +74,7 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
     (tipo: Tipo, centro: { x: number; y: number }) => {
       const data: NodoData = { tipo, titulo: TIPOS[tipo].tituloInicial }
       if (tipo === 'fin') data.resultado = 'ok'
-      const nuevo: Nodo = { id: nuevoId(), type: 'nodo', position: { x: centro.x - 110, y: centro.y - 36 }, data, selected: true }
+      const nuevo: Nodo = { id: nuevoId(), type: 'nodo', position: { x: aParrilla(centro.x), y: aParrilla(centro.y) }, data, selected: true }
       setNodes((ns) => [...ns.map((n) => ({ ...n, selected: false })), nuevo])
     },
     [setNodes],
@@ -82,7 +82,7 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
 
   const agregarEnCentro = (tipo: Tipo) => {
     const r = envoltorio.current!.getBoundingClientRect()
-    const desfase = (nodes.length % 5) * 24 // para que no se apilen exactamente
+    const desfase = (nodes.length % 5) * PARRILLA // para que no se apilen exactamente
     agregar(tipo, screenToFlowPosition({ x: r.left + r.width / 2 + desfase, y: r.top + r.height / 2 + desfase }))
   }
 
@@ -129,8 +129,9 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
         defaultEdgeOptions={{ type: 'conexion' }}
         connectionMode={ConnectionMode.Loose}
         colorMode={tema}
+        nodeOrigin={[0.5, 0.5]}
         snapToGrid
-        snapGrid={[10, 10]}
+        snapGrid={[PARRILLA, PARRILLA]}
         deleteKeyCode={dialogo ? null : ['Backspace', 'Delete']}
         onDragOver={(ev) => {
           ev.preventDefault()
@@ -140,7 +141,7 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
         fitView
         fitViewOptions={{ padding: { top: '40px', right: '40px', bottom: '110px', left: '210px' }, maxZoom: 1 }}
       >
-        <Background variant={BackgroundVariant.Dots} gap={20} size={1.4} color="var(--punto)" />
+        <Background variant={BackgroundVariant.Dots} gap={PARRILLA} size={1.4} color="var(--punto)" />
 
         <Panel position="top-left" className="panel paleta">
           <div className="panel-titulo">Elementos</div>

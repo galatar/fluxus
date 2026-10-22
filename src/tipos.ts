@@ -82,6 +82,8 @@ export type Conexion = Edge<ConexionData, 'conexion'>
 
 export interface Esquema {
   id: string
+  /** Formato de guardado; ver migrar() en almacen.ts. */
+  version?: number
   nombre: string
   descripcion: string
   creado: string
