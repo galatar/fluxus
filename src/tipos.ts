@@ -11,6 +11,7 @@ export type Tipo =
   | 'notificacion'
   | 'sistema'
   | 'fin'
+  | 'grupo'
 
 export type TipoCampo = 'texto' | 'parrafo' | 'numero' | 'fecha' | 'sino' | 'lista' | 'email' | 'dni'
 
@@ -80,6 +81,23 @@ export type ConexionData = {
 
 export type Conexion = Edge<ConexionData, 'conexion'>
 
+/** Carril (fila, por actor) o fase (columna). Se apilan desde un origen. */
+export interface Banda {
+  id: string
+  nombre: string
+  /** Alto si es carril, ancho si es fase. */
+  tamano: number
+}
+
+export interface Estructura {
+  carriles: Banda[]
+  /** y donde empieza el primer carril. */
+  y0: number
+  fases: Banda[]
+  /** x donde empieza la primera fase. */
+  x0: number
+}
+
 export interface Esquema {
   id: string
   /** Formato de guardado; ver migrar() en almacen.ts. */
@@ -90,4 +108,5 @@ export interface Esquema {
   actualizado: string
   nodes: Nodo[]
   edges: Conexion[]
+  estructura?: Estructura
 }

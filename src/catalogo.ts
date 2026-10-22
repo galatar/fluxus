@@ -7,6 +7,7 @@ import {
   GitBranch,
   Hourglass,
   Server,
+  SquareDashed,
   Upload,
   UserRound,
   type LucideIcon,
@@ -32,9 +33,13 @@ export const TIPOS: Record<Tipo, DefTipo> = {
   notificacion: { nombre: 'Aviso', ayuda: 'Correo o notificación', icono: Bell, tituloInicial: 'Notificar' },
   sistema: { nombre: 'Sistema', ayuda: 'Otra aplicación (Sirhus, Portafirmas…)', icono: Server, tituloInicial: 'Sistema externo' },
   fin: { nombre: 'Fin', ayuda: 'Final del procedimiento', icono: Flag, tituloInicial: 'Fin' },
+  grupo: { nombre: 'Grupo', ayuda: 'Marco que agrupa varias cajas; al moverlo se llevan dentro', icono: SquareDashed, tituloInicial: 'Grupo' },
 }
 
 export const ORDEN_TIPOS = Object.keys(TIPOS) as Tipo[]
+
+/** Tipos que son pasos del procedimiento (todo menos los marcos). */
+export const TIPOS_PASO = ORDEN_TIPOS.filter((t) => t !== 'grupo')
 
 export const CONEXIONES: Record<TipoConexion, string> = {
   normal: 'Camino normal',

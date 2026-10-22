@@ -58,7 +58,7 @@ export function esquemaVacio(nombre = 'Nuevo esquema'): Esquema {
 /** Quita el estado de interfaz (selección, medidas) antes de guardar. */
 export function limpiar(nodes: Nodo[], edges: Conexion[]) {
   return {
-    nodes: nodes.map(({ id, type, position, data }) => ({ id, type, position, data })),
+    nodes: nodes.map(({ id, type, position, data, width, height, zIndex }) => ({ id, type, position, data, width, height, zIndex })),
     edges: edges.map(({ id, source, target, sourceHandle, targetHandle, type, data }) => ({
       id, source, target, sourceHandle, targetHandle, type, data,
     })),
@@ -119,8 +119,8 @@ Denegar la solicitud de teletrabajo.`
 
 export function esquemaEjemplo(): Esquema {
   const nodos = [
-    n('n1', 'inicio', 60, 40, 'Inicio', 'persona solicitante'),
-    n('n2', 'formulario', 300, 40, 'Solicitud', 'datos + horario propuesto', {
+    n('n1', 'inicio', 60, 120, 'Inicio', 'persona solicitante'),
+    n('n2', 'formulario', 300, 120, 'Solicitud', 'datos + horario propuesto', {
       campos: [
         campo('nombre_completo', 'Nombre y apellidos', 'texto'),
         campo('dni', 'DNI', 'dni'),
@@ -130,54 +130,69 @@ export function esquemaEjemplo(): Esquema {
         campo('horario_propuesto', 'Horario propuesto', 'parrafo', false),
       ],
     }),
-    n('n3', 'aportado', 600, 40, 'Plan de trabajo', 'firmado por la persona', {
+    n('n3', 'aportado', 600, 120, 'Plan de trabajo', 'firmado por la persona', {
       requisitos: [
         { id: 'd1', nombre: 'Plan de trabajo', obligatorio: true, formato: 'pdf', firmado: true },
         { id: 'd2', nombre: 'Autoevaluación del puesto', obligatorio: false, formato: 'pdf', firmado: false, notas: 'modelo de la web del PTGAS' },
       ],
     }),
-    n('n4', 'decision', 900, 40, '¿Completa?', 'revisa la unidad'),
-    n('n5', 'paso', 1200, 40, 'Informe', 'responsable del servicio', {
+    n('n4', 'decision', 600, 360, '¿Completa?', 'revisa la unidad'),
+    n('n5', 'paso', 900, 840, 'Informe', 'responsable del servicio', {
       campos: [
         campo('sentido_informe', 'Sentido del informe', 'lista', true, 'Favorable\nDesfavorable'),
         campo('observaciones', 'Observaciones', 'parrafo', false),
       ],
     }),
-    n('n6', 'espera', 900, 260, 'Subsanación', '10 días hábiles'),
-    n('n7', 'decision', 1200, 260, '¿Favorable?', 'valora el informe'),
-    n('n8', 'documento', 1500, 260, 'Resolución', 'plantilla: concesión', {
+    n('n6', 'espera', 900, 120, 'Subsanación', '10 días hábiles'),
+    n('n7', 'decision', 1200, 600, '¿Favorable?', 'valora el informe'),
+    n('n8', 'documento', 1500, 600, 'Resolución', 'plantilla: concesión', {
       plantilla: { formato: 'pdf', nombreFichero: '{{numero_expediente}}-concesion', cuerpo: RESOLUCION },
     }),
-    n('n9', 'notificacion', 1500, 480, 'Notificar', 'persona interesada'),
-    n('n10', 'fin', 1500, 700, 'Concedido', 'alta en teletrabajo', { resultado: 'ok' }),
-    n('n11', 'documento', 1200, 480, 'Denegación', 'plantilla: denegatoria', {
+    n('n9', 'notificacion', 1800, 600, 'Notificar', 'persona interesada'),
+    n('n10', 'fin', 1800, 360, 'Concedido', 'alta en teletrabajo', { resultado: 'ok' }),
+    n('n11', 'documento', 1200, 360, 'Denegación', 'plantilla: denegatoria', {
       plantilla: { formato: 'pdf', nombreFichero: '{{numero_expediente}}-denegacion', cuerpo: DENEGACION },
     }),
-    n('n12', 'fin', 900, 480, 'Denegado', 'fin del procedimiento', { resultado: 'ko' }),
+    n('n12', 'fin', 1500, 360, 'Denegado', 'fin del procedimiento', { resultado: 'ko' }),
+    n('n13', 'fin', 1200, 120, 'Desiste', 'no subsana en plazo', { resultado: 'ko' }),
   ]
   const si = e('n7', 'right', 'n8', 'left', 'normal', 'sí')
   si.data!.condicion = { campo: 'sentido_informe', operador: 'igual', valor: 'Favorable' }
-  const no = e('n7', 'bottom', 'n11', 'top', 'error', 'no')
+  const no = e('n7', 'top', 'n11', 'bottom', 'error', 'no')
   no.data!.porDefecto = true
 
   return {
     ...esquemaVacio('Solicitud de teletrabajo'),
     descripcion: 'Ejemplo: una persona del PTGAS pide teletrabajo y la unidad lo resuelve.',
     nodes: nodos,
+    estructura: {
+      y0: 0,
+      carriles: [
+        { id: 'c1', nombre: 'Persona solicitante', tamano: 240 },
+        { id: 'c2', nombre: 'Unidad de RR. HH.', tamano: 480 },
+        { id: 'c3', nombre: 'Responsable', tamano: 240 },
+      ],
+      x0: -60,
+      fases: [
+        { id: 'f1', nombre: 'Solicitud', tamano: 780 },
+        { id: 'f2', nombre: 'Instrucción', tamano: 600 },
+        { id: 'f3', nombre: 'Resolución', tamano: 660 },
+      ],
+    },
     edges: [
       e('n1', 'right', 'n2', 'left', 'normal'),
       e('n2', 'right', 'n3', 'left', 'normal', 'enviar'),
-      e('n3', 'right', 'n4', 'left', 'normal'),
-      e('n4', 'right', 'n5', 'left', 'normal', 'sí'),
-      e('n4', 'bottom', 'n6', 'top', 'alternativa', 'no'),
-      e('n6', 'left', 'n3', 'bottom', 'alternativa', 'subsana'),
-      e('n6', 'bottom', 'n12', 'top', 'error', 'no subsana'),
-      e('n5', 'bottom', 'n7', 'top', 'normal'),
+      e('n3', 'bottom', 'n4', 'top', 'normal'),
+      e('n4', 'right', 'n6', 'bottom', 'alternativa', 'no'),
+      e('n6', 'left', 'n3', 'right', 'alternativa', 'subsana'),
+      e('n6', 'right', 'n13', 'left', 'error', 'no subsana'),
+      e('n4', 'bottom', 'n5', 'left', 'normal', 'sí'),
+      e('n5', 'right', 'n7', 'bottom', 'normal'),
       si,
-      e('n8', 'bottom', 'n9', 'top', 'normal'),
-      e('n9', 'bottom', 'n10', 'top', 'normal'),
+      e('n8', 'right', 'n9', 'left', 'normal'),
+      e('n9', 'top', 'n10', 'bottom', 'normal'),
       no,
-      e('n11', 'left', 'n12', 'right', 'error'),
+      e('n11', 'right', 'n12', 'left', 'error'),
     ],
   }
 }

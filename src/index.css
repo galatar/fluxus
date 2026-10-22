@@ -29,6 +29,10 @@
   --c-ok: #15803d;
   --c-ko: #dc2626;
 
+  --carril-fondo: rgba(241, 245, 249, 0.55);
+  --carril-fondo-2: rgba(248, 250, 252, 0.35);
+  --carril-borde: #cfd8e3;
+
   --a-normal: #3f8f6b;
   --a-alternativa: #7c3aed;
   --a-error: #dc2f4a;
@@ -59,6 +63,10 @@
   --c-sistema: #a5b4c7;
   --c-ok: #4ade80;
   --c-ko: #fb7185;
+
+  --carril-fondo: rgba(15, 26, 46, 0.55);
+  --carril-fondo-2: rgba(11, 19, 34, 0.35);
+  --carril-borde: #22324c;
 
   --a-normal: #5eead4;
   --a-alternativa: #a78bfa;
@@ -910,4 +918,167 @@ mark.variable.desconocida {
   background: color-mix(in srgb, var(--c-ko) 15%, transparent);
   color: var(--c-ko);
   text-decoration: underline wavy;
+}
+
+/* --- Carriles, fases y grupos (paso 3) ----------------------------------- */
+
+.estructura {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+}
+.carril {
+  position: absolute;
+  border-top: 1px solid var(--carril-borde);
+  border-bottom: 1px solid var(--carril-borde);
+  margin-top: -1px;
+  background: var(--carril-fondo);
+}
+.carril.impar {
+  background: var(--carril-fondo-2);
+}
+.carril-nombre {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-right: 1px dashed var(--carril-borde);
+  background: none;
+  cursor: pointer;
+  pointer-events: all;
+}
+.carril-nombre span {
+  writing-mode: vertical-rl;
+  rotate: 180deg;
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--texto-3);
+  white-space: nowrap;
+}
+.carril-nombre:hover span {
+  color: var(--texto);
+}
+.asa-carril {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -5px;
+  height: 10px;
+  cursor: row-resize;
+  pointer-events: all;
+}
+.asa-carril:hover,
+.asa-fase:hover {
+  background: color-mix(in srgb, var(--acento) 25%, transparent);
+}
+
+.fase-cabecera {
+  position: absolute;
+  display: grid;
+  place-items: center;
+}
+.fase-cabecera::before {
+  content: '';
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  top: 50%;
+  border-top: 1px solid currentColor;
+  opacity: 0.45;
+}
+.fase-nombre {
+  position: relative;
+  padding: 3px 12px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: var(--fondo);
+  color: inherit;
+  font-family: var(--mono);
+  font-size: 13px;
+  cursor: pointer;
+  pointer-events: all;
+}
+.asa-fase {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -5px;
+  width: 10px;
+  cursor: col-resize;
+  pointer-events: all;
+}
+.fase-linea {
+  position: absolute;
+  border-left: 1px dashed var(--carril-borde);
+}
+
+.react-flow__node:has(> .grupo) {
+  /* El marco no debe tapar clics en las cajas que contiene. */
+  background: none;
+}
+.grupo {
+  width: 100%;
+  height: 100%;
+  border: 1.5px dashed var(--texto-3);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--texto-3) 6%, transparent);
+}
+.grupo.seleccionado {
+  border-color: var(--acento);
+}
+.grupo-titulo {
+  position: absolute;
+  top: -20px;
+  left: 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--texto-2);
+}
+.grupo-borde.react-flow__resize-control.line {
+  border-color: transparent;
+}
+.grupo-asa.react-flow__resize-control.handle {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: var(--superficie);
+  border: 1.5px solid var(--acento);
+}
+
+.paleta-separador {
+  height: 1px;
+  margin: 6px 4px;
+  background: var(--borde);
+}
+.muestra.neutra {
+  --c: var(--texto-2);
+  --relleno: transparent;
+}
+.ubicacion {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: -4px 0 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--texto-2);
+}
+.dos-columnas.iguales {
+  grid-template-columns: 1fr 1fr;
+}
+.dos-columnas.iguales > section:last-child {
+  position: static;
+}
+.contador-cajas {
+  padding-bottom: 9px;
+  font-size: 11px;
+  color: var(--texto-3);
+  white-space: nowrap;
+}
+.tarjeta.tarjeta-fila {
+  flex-direction: row;
+  align-items: flex-end;
 }

@@ -1,9 +1,9 @@
-import { CONEXIONES, ORDEN_TIPOS, TIPOS } from '../catalogo'
+import { CONEXIONES, TIPOS, TIPOS_PASO } from '../catalogo'
 import type { Conexion, Nodo, TipoConexion } from '../tipos'
 
 export function Leyenda({ nodos, conexiones }: { nodos: Nodo[]; conexiones: Conexion[] }) {
   const cuenta = (t: string) => nodos.filter((n) => n.data.tipo === t).length
-  const usados = ORDEN_TIPOS.filter((t) => cuenta(t) > 0)
+  const usados = TIPOS_PASO.filter((t) => cuenta(t) > 0)
   const conexUsadas = (Object.keys(CONEXIONES) as TipoConexion[]).filter((t) => conexiones.some((c) => (c.data?.tipo ?? 'normal') === t))
   if (usados.length === 0) return null
 

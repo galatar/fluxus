@@ -1,21 +1,23 @@
 import { ClipboardList, FileText, Trash2, Upload } from 'lucide-react'
-import { CONEXIONES, ORDEN_TIPOS, TIPOS } from '../catalogo'
+import { CONEXIONES, TIPOS, TIPOS_PASO } from '../catalogo'
 import { CON_CAMPOS, textoCondicion, variablesDe, variablesUsadas } from '../dominio'
 import { EditorCondicion } from '../editores/EditorCondicion'
-import type { Conexion, ConexionData, Nodo, NodoData, TipoConexion } from '../tipos'
+import { bandaDe } from '../estructura'
+import type { Conexion, ConexionData, Estructura, Nodo, NodoData, TipoConexion } from '../tipos'
 
 export type QueEditar = 'campos' | 'plantilla' | 'requisitos'
 
 interface Props {
   nodos: Nodo[]
   conexiones: Conexion[]
+  estructura: Estructura
   onNodo: (id: string, cambios: Partial<NodoData>) => void
   onConexion: (id: string, cambios: Partial<ConexionData>) => void
   onBorrar: (ids: string[]) => void
   onAbrir: (id: string, que: QueEditar) => void
 }
 
-export function Inspector({ nodos, conexiones, onNodo, onConexion, onBorrar, onAbrir }: Props) {
+export function Inspector({ nodos, conexiones, estructura, onNodo, onConexion, onBorrar, onAbrir }: Props) {
   const nodosSel = nodos.filter((n) => n.selected)
   const conexSel = conexiones.filter((e) => e.selected)
   const variables = variablesDe(nodos)
@@ -24,10 +26,35 @@ export function Inspector({ nodos, conexiones, onNodo, onConexion, onBorrar, onA
   if (nodosSel.length === 1 && conexSel.length === 0) {
     const { id, data } = nodosSel[0]
     const salidas = conexiones.filter((c) => c.source === id)
+    if (data.tipo === 'grupo') {
+      return (
+        <>
+          <div className="panel-titulo">Grupo</div>
+          <p className="ayuda">{TIPOS.grupo.ayuda}. Arrastra sus esquinas para cambiar el tamaño.</p>
+          <label>
+            Título
+            <input value={data.titulo} onChange={(e) => onNodo(id, { titulo: e.target.value })} autoFocus />
+          </label>
+          <label>
+            Notas
+            <textarea rows={4} value={data.notas ?? ''} onChange={(e) => onNodo(id, { notas: e.target.value })} />
+          </label>
+          <BotonBorrar onClick={() => onBorrar([id])} />
+        </>
+      )
+    }
+    const carril = bandaDe(nodosSel[0], 'y', estructura.y0, estructura.carriles)
+    const fase = bandaDe(nodosSel[0], 'x', estructura.x0, estructura.fases)
     return (
       <>
         <div className="panel-titulo">{TIPOS[data.tipo].nombre}</div>
         <p className="ayuda">{TIPOS[data.tipo].ayuda}</p>
+        {(carril || fase) && (
+          <p className="ubicacion">
+            {carril && <span>Actor: {carril.nombre}</span>}
+            {fase && <span>Fase: {fase.nombre}</span>}
+          </p>
+        )}
         <label>
           Título
           <input value={data.titulo} onChange={(e) => onNodo(id, { titulo: e.target.value })} autoFocus />
@@ -39,7 +66,7 @@ export function Inspector({ nodos, conexiones, onNodo, onConexion, onBorrar, onA
         <label>
           Tipo
           <select value={data.tipo} onChange={(e) => onNodo(id, { tipo: e.target.value as NodoData['tipo'] })}>
-            {ORDEN_TIPOS.map((t) => (
+            {TIPOS_PASO.map((t) => (
               <option key={t} value={t}>
                 {TIPOS[t].nombre}
               </option>

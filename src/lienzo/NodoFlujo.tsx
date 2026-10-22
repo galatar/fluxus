@@ -1,4 +1,4 @@
-import { Handle, Position, type NodeProps } from '@xyflow/react'
+import { Handle, NodeResizer, Position, type NodeProps } from '@xyflow/react'
 import { TIPOS } from '../catalogo'
 import { resumenNodo } from '../dominio'
 import type { Nodo } from '../tipos'
@@ -11,6 +11,7 @@ const LADOS = [
 ] as const
 
 export function NodoFlujo({ data, selected }: NodeProps<Nodo>) {
+  if (data.tipo === 'grupo') return <NodoGrupo titulo={data.titulo} selected={selected} />
   const Icono = TIPOS[data.tipo].icono
   const resumen = resumenNodo(data)
   const clases = ['nodo', `t-${data.tipo}`]
@@ -27,5 +28,17 @@ export function NodoFlujo({ data, selected }: NodeProps<Nodo>) {
         <Handle key={id} id={id} type="source" position={pos} className="asa" />
       ))}
     </div>
+  )
+}
+
+/** Marco discontinuo con título; se dibuja detrás de las cajas. */
+function NodoGrupo({ titulo, selected }: { titulo: string; selected: boolean }) {
+  return (
+    <>
+      <NodeResizer isVisible={selected} minWidth={160} minHeight={100} lineClassName="grupo-borde" handleClassName="grupo-asa" />
+      <div className={`grupo${selected ? ' seleccionado' : ''}`}>
+        <span className="grupo-titulo">{titulo}</span>
+      </div>
+    </>
   )
 }
