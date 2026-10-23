@@ -107,6 +107,51 @@ textarea {
   display: grid;
   grid-template-columns: 250px 1fr;
   height: 100%;
+  transition: grid-template-columns 0.2s ease;
+}
+/* Panel plegado: solo iconos y números; el nombre sale al pasar el ratón. */
+.app.plegado {
+  grid-template-columns: 60px 1fr;
+}
+.plegado .solo-abierto {
+  display: none !important;
+}
+.plegado .lateral {
+  padding: 16px 8px;
+  align-items: stretch;
+}
+.plegado .marca,
+.plegado .esquema-item {
+  justify-content: center;
+}
+.plegado .marca {
+  padding: 0 0 6px;
+}
+.plegado .lateral > .boton,
+.plegado .pie .boton {
+  justify-content: center;
+  padding-inline: 0;
+}
+.plegado .pie {
+  flex-direction: column;
+}
+.plegar {
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--texto-3);
+  cursor: pointer;
+}
+.plegar:hover {
+  background: var(--superficie-2);
+  color: var(--texto);
+}
+.plegado .plegar {
+  margin: 0;
 }
 
 .lateral {
@@ -114,6 +159,7 @@ textarea {
   flex-direction: column;
   gap: 12px;
   padding: 16px 12px;
+  overflow: hidden;
   background: var(--superficie);
   border-right: 1px solid var(--borde);
   min-height: 0;

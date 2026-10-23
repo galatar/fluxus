@@ -32,11 +32,22 @@ function migrar(e: Esquema): Esquema {
 export const nuevoId = () => crypto.randomUUID()
 
 const ahora = () => new Date().toISOString()
+const CLAVE_ORDEN = 'flujus:orden'
 
 export function cargarEsquemas(): Esquema[] {
   try {
     const crudo = localStorage.getItem(CLAVE)
-    if (crudo) return (JSON.parse(crudo) as Esquema[]).map(migrar)
+    if (crudo) {
+      const lista = (JSON.parse(crudo) as Esquema[]).map(migrar)
+      // Antes los esquemas nuevos se ponían delante; ahora van detrás, así que
+      // la lista guardada se da la vuelta una sola vez (y se guarda ya vuelta).
+      if (!localStorage.getItem(CLAVE_ORDEN)) {
+        lista.reverse()
+        localStorage.setItem(CLAVE, JSON.stringify(lista))
+        localStorage.setItem(CLAVE_ORDEN, 'antiguos-primero')
+      }
+      return lista
+    }
   } catch {
     // Datos corruptos o almacenamiento bloqueado: empezamos con el ejemplo.
   }

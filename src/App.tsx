@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Copy, Download, Moon, Plus, Sparkles, Sun, Trash2, Upload, Workflow } from 'lucide-react'
+import { Copy, Download, Moon, PanelLeftClose, PanelLeftOpen, Plus, Sparkles, Sun, Trash2, Upload, Workflow } from 'lucide-react'
 import { cargarEsquemas, esquemaEjemplo, esquemaVacio, exportar, guardarEsquemas, importar, nuevoId } from './almacen'
 import { Editor } from './lienzo/Editor'
 import type { Esquema } from './tipos'
@@ -27,6 +27,7 @@ export default function App() {
   const [esquemas, setEsquemas] = useState<Esquema[]>(cargarEsquemas)
   const [activoId, setActivoId] = useState(() => leer('flujus:activo') ?? esquemas[0]?.id)
   const [tema, setTema] = useState<Tema>(() => (leer('flujus:tema') as Tema) ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'))
+  const [plegado, setPlegado] = useState(() => leer('flujus:lateral') === 'plegado')
   const ficheroRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => guardarEsquemas(esquemas), [esquemas])
@@ -37,6 +38,7 @@ export default function App() {
   useEffect(() => {
     if (activoId) escribir('flujus:activo', activoId)
   }, [activoId])
+  useEffect(() => escribir('flujus:lateral', plegado ? 'plegado' : 'abierto'), [plegado])
 
   const activo = esquemas.find((e) => e.id === activoId) ?? esquemas[0]
 
@@ -45,7 +47,7 @@ export default function App() {
   }, [])
 
   const crear = (e: Esquema) => {
-    setEsquemas((es) => [e, ...es])
+    setEsquemas((es) => [...es, e])
     setActivoId(e.id)
   }
 
@@ -64,30 +66,43 @@ export default function App() {
   }
 
   return (
-    <div className="app">
+    <div className={`app${plegado ? ' plegado' : ''}`}>
       <aside className="lateral">
         <div className="marca">
-          <Workflow size={18} />
-          <span>Flujus</span>
+          <Workflow size={18} className="solo-abierto" />
+          <span className="solo-abierto">Flujus</span>
+          <button
+            className="plegar"
+            onClick={() => setPlegado(!plegado)}
+            title={plegado ? 'Mostrar la lista de esquemas' : 'Plegar la lista para tener más sitio'}
+            aria-label={plegado ? 'Mostrar panel' : 'Plegar panel'}
+          >
+            {plegado ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+          </button>
         </div>
 
-        <button className="boton primario" onClick={() => crear(esquemaVacio())}>
-          <Plus size={14} /> Nuevo esquema
+        <button className="boton primario" onClick={() => crear(esquemaVacio())} title="Nuevo esquema">
+          <Plus size={14} /> <span className="solo-abierto">Nuevo esquema</span>
         </button>
 
-        <div className="lista-titulo">Esquemas · {esquemas.length}</div>
+        <div className="lista-titulo solo-abierto">Esquemas · {esquemas.length}</div>
         <nav className="lista">
           {esquemas.map((e, i) => (
-            <div key={e.id} className={`esquema-item${e.id === activo?.id ? ' activo' : ''}`} onClick={() => setActivoId(e.id)}>
+            <div
+              key={e.id}
+              className={`esquema-item${e.id === activo?.id ? ' activo' : ''}`}
+              onClick={() => setActivoId(e.id)}
+              title={plegado ? e.nombre || 'Sin nombre' : undefined}
+            >
               <span className="num">{String(i + 1).padStart(2, '0')}</span>
-              <div className="esquema-texto">
+              <div className="esquema-texto solo-abierto">
                 <div className="esquema-nombre">{e.nombre || 'Sin nombre'}</div>
                 <div className="esquema-meta">
                   {e.nodes.length} elementos · {fecha.format(new Date(e.actualizado))}
                 </div>
               </div>
-              <div className="acciones" onClick={(ev) => ev.stopPropagation()}>
-                <button title="Duplicar" onClick={() => crear({ ...structuredClone(e), id: nuevoId(), nombre: `${e.nombre} (copia)` })}>
+              <div className="acciones solo-abierto" onClick={(ev) => ev.stopPropagation()}>
+                <button title="Duplicar" onClick={() => crear({ ...structuredClone(e), id: nuevoId(), nombre: `${e.nombre} (copia)`, creado: new Date().toISOString() })}>
                   <Copy size={13} />
                 </button>
                 <button title="Borrar" onClick={() => borrar(e)}>
@@ -100,7 +115,7 @@ export default function App() {
 
         <div className="pie">
           <button className="boton" onClick={() => crear(esquemaEjemplo())} title="Añade una copia del ejemplo de teletrabajo">
-            <Sparkles size={13} /> Ver un ejemplo
+            <Sparkles size={13} /> <span className="solo-abierto">Ver un ejemplo</span>
           </button>
           <button className="boton" onClick={() => setTema(tema === 'dark' ? 'light' : 'dark')} title="Cambiar tema">
             {tema === 'dark' ? <Sun size={13} /> : <Moon size={13} />}
