@@ -607,7 +607,7 @@ textarea {
 /* --- Leyenda ------------------------------------------------------------- */
 
 .leyenda {
-  max-width: calc(100% - 640px);
+  max-width: calc(100% - 720px);
   padding: 6px 4px;
 }
 .leyenda-titulo {
@@ -1154,6 +1154,11 @@ mark.variable.desconocida {
 .barra button:hover {
   background: var(--superficie-2);
   color: var(--texto);
+}
+.barra button:disabled {
+  opacity: 0.35;
+  cursor: default;
+  background: none;
 }
 .barra button.activo {
   background: color-mix(in srgb, var(--acento) 14%, transparent);

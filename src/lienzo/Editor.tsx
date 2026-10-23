@@ -32,6 +32,7 @@ import { Carriles } from './Carriles'
 import { ConexionFlujo, Flechas } from './ConexionFlujo'
 import { Inspector, type QueEditar } from './Inspector'
 import { Leyenda } from './Leyenda'
+import { useHistorial } from './historial'
 import { LecturaContexto, resaltar, type ModoLectura } from './lectura'
 import { NodoFlujo, ProblemasContexto } from './NodoFlujo'
 import { Revision } from './Revision'
@@ -62,7 +63,8 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
   const [estructura, setEstructura] = useState<Estructura>(esquema.estructura ?? ESTRUCTURA_VACIA)
   const { screenToFlowPosition, fitView } = useReactFlow()
   const envoltorio = useRef<HTMLDivElement>(null)
-  const ultimoGuardado = useRef(JSON.stringify({ ...limpiar(esquema.nodes, esquema.edges), estructura: esquema.estructura ?? ESTRUCTURA_VACIA }))
+  const [fotoInicial] = useState(() => JSON.stringify({ ...limpiar(esquema.nodes, esquema.edges), estructura: esquema.estructura ?? ESTRUCTURA_VACIA }))
+  const ultimoGuardado = useRef(fotoInicial)
   const [dialogo, setDialogo] = useState<EstadoDialogo | null>(null)
   const cerrarDialogo = useCallback(() => setDialogo(null), [])
   const [modo, setModo] = useState<ModoLectura | null>(null)
@@ -78,17 +80,63 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
   // calculara a cada paso, el grupo iría recogiendo cajas por el camino.
   const contenidoGrupos = useRef(new Map<string, string[]>())
 
+  // Deshacer y rehacer: se vuelve a una foto anterior de cajas, flechas y estructura.
+  const aplicarFoto = useCallback(
+    (foto: string) => {
+      const f = JSON.parse(foto) as Pick<Esquema, 'nodes' | 'edges'> & { estructura: Estructura }
+      estructuraRef.current = f.estructura
+      // La selección no está en la foto: se conserva la de ahora.
+      setNodes((ns) => {
+        const sel = new Set(ns.filter((n) => n.selected).map((n) => n.id))
+        return f.nodes.map((n) => (sel.has(n.id) ? { ...n, selected: true } : n))
+      })
+      setEdges((es) => {
+        const sel = new Set(es.filter((e) => e.selected).map((e) => e.id))
+        return f.edges.map((e) => (sel.has(e.id) ? { ...e, selected: true } : e))
+      })
+      setEstructura(f.estructura)
+    },
+    [setNodes, setEdges],
+  )
+  const historial = useHistorial(fotoInicial, aplicarFoto)
+  const foto = () => JSON.stringify({ ...limpiar(nodes, edges), estructura })
+  const deshacer = () => historial.deshacer(foto())
+  const rehacer = () => historial.rehacer(foto())
+
+  // Ctrl+Z (⌘Z en Mac) deshace; con Mayúsculas, o Ctrl+Y, rehace. También
+  // dentro de los campos del inspector: el deshacer del navegador no sirve en
+  // campos controlados por React. Con un diálogo abierto no se toca nada.
+  useEffect(() => {
+    const alPulsar = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || dialogo) return
+      const tecla = e.key.toLowerCase()
+      if (tecla === 'z') {
+        e.preventDefault()
+        if (e.shiftKey) rehacer()
+        else deshacer()
+      } else if (tecla === 'y') {
+        e.preventDefault()
+        rehacer()
+      }
+    }
+    window.addEventListener('keydown', alPulsar)
+    return () => window.removeEventListener('keydown', alPulsar)
+  })
+
   // Autoguardado: solo cuando cambia el contenido, no la selección.
+  // Cada foto estable es también un paso del historial.
+  const { anotar } = historial
   useEffect(() => {
     const t = setTimeout(() => {
       const limpio = { ...limpiar(nodes, edges), estructura }
       const json = JSON.stringify(limpio)
+      anotar(json)
       if (json === ultimoGuardado.current) return
       ultimoGuardado.current = json
       onCambio(esquema.id, limpio)
     }, 300)
     return () => clearTimeout(t)
-  }, [nodes, edges, estructura, esquema.id, onCambio])
+  }, [nodes, edges, estructura, esquema.id, onCambio, anotar])
 
   // Ajuste a la parrilla hecho a mano: el snapToGrid de React Flow ajusta la
   // esquina de la caja, no el centro, y con alturas distintas las flechas
@@ -407,6 +455,8 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
             errores={problemas.filter((p) => p.nivel === 'error').length}
             avisos={problemas.filter((p) => p.nivel === 'aviso').length}
             onImagen={exportarImagen}
+            onDeshacer={historial.puedeDeshacer ? deshacer : undefined}
+            onRehacer={historial.puedeRehacer ? rehacer : undefined}
           />
         </Panel>
       </ReactFlow>

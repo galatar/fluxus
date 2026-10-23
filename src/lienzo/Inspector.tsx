@@ -33,7 +33,7 @@ export function Inspector({ nodos, conexiones, estructura, onNodo, onConexion, o
           <p className="ayuda">{TIPOS.grupo.ayuda}. Arrastra sus esquinas para cambiar el tamaño.</p>
           <label>
             Título
-            <input value={data.titulo} onChange={(e) => onNodo(id, { titulo: e.target.value })} autoFocus />
+            <input value={data.titulo} onChange={(e) => onNodo(id, { titulo: e.target.value })} />
           </label>
           <label>
             Notas
@@ -57,7 +57,7 @@ export function Inspector({ nodos, conexiones, estructura, onNodo, onConexion, o
         )}
         <label>
           Título
-          <input value={data.titulo} onChange={(e) => onNodo(id, { titulo: e.target.value })} autoFocus />
+          <input value={data.titulo} onChange={(e) => onNodo(id, { titulo: e.target.value })} />
         </label>
         <label>
           Detalle
@@ -147,7 +147,7 @@ export function Inspector({ nodos, conexiones, estructura, onNodo, onConexion, o
         </p>
         <label>
           Etiqueta
-          <input value={data?.etiqueta ?? ''} placeholder="sí, no, enviar…" onChange={(e) => onConexion(id, { etiqueta: e.target.value })} autoFocus />
+          <input value={data?.etiqueta ?? ''} placeholder="sí, no, enviar…" onChange={(e) => onConexion(id, { etiqueta: e.target.value })} />
         </label>
         <label>
           Tipo

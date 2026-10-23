@@ -1,5 +1,5 @@
 import { useReactFlow, useViewport } from '@xyflow/react'
-import { CircleCheck, Focus, ImageDown, Maximize, Minus, Plus, Route, TriangleAlert } from 'lucide-react'
+import { CircleCheck, Focus, ImageDown, Maximize, Minus, Plus, Redo2, Route, TriangleAlert, Undo2 } from 'lucide-react'
 import type { ModoLectura } from './lectura'
 
 interface Props {
@@ -10,10 +10,16 @@ interface Props {
   errores: number
   avisos: number
   onImagen: (formato: 'png' | 'svg') => void
+  /** Sin función, el botón sale desactivado (no hay nada que deshacer o rehacer). */
+  onDeshacer?: () => void
+  onRehacer?: () => void
 }
 
-/** Barra inferior al estilo archify: lectura, revisión, imagen y zoom. */
-export function Barra({ modo, onModo, revisando, onRevisar, errores, avisos, onImagen }: Props) {
+const MAC = /Mac|iPhone|iPad/.test(navigator.platform)
+const TECLA = MAC ? '⌘' : 'Ctrl+'
+
+/** Barra inferior al estilo archify: deshacer, lectura, revisión, imagen y zoom. */
+export function Barra({ modo, onModo, revisando, onRevisar, errores, avisos, onImagen, onDeshacer, onRehacer }: Props) {
   const { zoomIn, zoomOut, fitView } = useReactFlow()
   const { zoom } = useViewport()
   const alternar = (m: ModoLectura) => onModo(modo === m ? null : m)
@@ -21,6 +27,13 @@ export function Barra({ modo, onModo, revisando, onRevisar, errores, avisos, onI
 
   return (
     <div className="barra">
+      <button onClick={onDeshacer} disabled={!onDeshacer} title={`Deshacer (${TECLA}Z)`} aria-label="Deshacer">
+        <Undo2 size={14} />
+      </button>
+      <button onClick={onRehacer} disabled={!onRehacer} title={`Rehacer (${MAC ? '⇧⌘Z' : 'Ctrl+Mayús+Z'})`} aria-label="Rehacer">
+        <Redo2 size={14} />
+      </button>
+      <span className="barra-sep" />
       <button className={modo === 'camino' ? 'activo' : ''} onClick={() => alternar('camino')} title="Resalta todo lo que lleva a la caja elegida y lo que sale de ella">
         <Route size={14} /> Camino
       </button>
