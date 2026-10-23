@@ -77,6 +77,8 @@ export type ConexionData = {
   /** Solo en salidas de una decisión. */
   condicion?: Condicion
   porDefecto?: boolean
+  /** Cuánto se ha movido a mano el tramo central de la flecha (en px del lienzo). */
+  desvio?: number
 }
 
 export type Conexion = Edge<ConexionData, 'conexion'>

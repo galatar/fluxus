@@ -165,6 +165,20 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
     [setEdges],
   )
 
+  // Arrastrar un extremo de la flecha la lleva a otro lado de la caja o a otra caja.
+  // El tramo central vuelve a su sitio porque la ruta cambia.
+  const onReconnect = useCallback(
+    (vieja: Conexion, nueva: Connection) =>
+      setEdges((es) =>
+        es.map((e) =>
+          e.id === vieja.id
+            ? { ...e, source: nueva.source, target: nueva.target, sourceHandle: nueva.sourceHandle, targetHandle: nueva.targetHandle, data: { tipo: 'normal', ...e.data, desvio: undefined } }
+            : e,
+        ),
+      ),
+    [setEdges],
+  )
+
   const agregar = useCallback(
     (tipo: Tipo, centro: { x: number; y: number }) => {
       const data: NodoData = { tipo, titulo: TIPOS[tipo].tituloInicial }
@@ -300,6 +314,7 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
         onNodeDragStop={() => contenidoGrupos.current.clear()}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onReconnect={onReconnect}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         defaultEdgeOptions={{ type: 'conexion' }}

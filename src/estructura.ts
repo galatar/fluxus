@@ -10,7 +10,7 @@ export const MIN_BANDA = 120
 /** Espacio para el nombre del carril, a la izquierda. */
 export const MARGEN_CARRIL = 60
 /** Alto de la cabecera de las fases. */
-export const CABECERA_FASE = 44
+export const CABECERA_FASE = 56
 
 /** Rectángulo de una caja en coordenadas del lienzo (las cajas se colocan por su centro). */
 export function caja(n: Nodo) {

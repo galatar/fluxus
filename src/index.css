@@ -559,7 +559,8 @@ textarea {
   stroke-dasharray: 5 4;
 }
 
-.etiqueta {
+.etiqueta,
+.asa-tramo {
   position: absolute;
   padding: 2px 8px;
   font-family: var(--mono);
@@ -570,6 +571,37 @@ textarea {
   border-radius: 999px;
   pointer-events: none;
   white-space: nowrap;
+}
+/* Tramo central de una flecha seleccionada: se arrastra por la etiqueta o por esta píldora. */
+.asa-tramo {
+  width: 22px;
+  height: 10px;
+  padding: 0;
+  border-color: var(--a);
+}
+.movible {
+  pointer-events: all;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--a) 22%, transparent);
+}
+.movible.eje-x {
+  cursor: ew-resize;
+}
+.movible.eje-y {
+  cursor: ns-resize;
+}
+/* Extremos de la flecha seleccionada: se arrastran a otro lado o a otra caja. */
+.react-flow__edge.selected .react-flow__edgeupdater {
+  fill: var(--fondo);
+  stroke: var(--acento);
+  stroke-width: 1.5px;
+  r: 6px;
+}
+.exportando .movible {
+  box-shadow: none;
+}
+.exportando .asa-tramo,
+.exportando .react-flow__edgeupdater {
+  display: none;
 }
 
 /* --- Leyenda ------------------------------------------------------------- */
@@ -954,7 +986,8 @@ mark.variable.desconocida {
   writing-mode: vertical-rl;
   rotate: 180deg;
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: 16px;
+  font-weight: 600;
   letter-spacing: 0.06em;
   color: var(--texto-3);
   white-space: nowrap;
@@ -992,13 +1025,14 @@ mark.variable.desconocida {
 }
 .fase-nombre {
   position: relative;
-  padding: 3px 12px;
-  border: 1px solid currentColor;
+  padding: 5px 16px;
+  border: 1.5px solid currentColor;
   border-radius: 999px;
   background: var(--fondo);
   color: inherit;
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
   pointer-events: all;
 }
