@@ -2,7 +2,8 @@ import { FileUp, Plus } from 'lucide-react'
 import { nuevoId } from '../almacen'
 import { FORMATOS_DOC } from '../dominio'
 import type { DocRequerido, FormatoDoc } from '../tipos'
-import { BotonesFila, mover } from './Filas'
+import { BotonesFila } from './Filas'
+import { mover } from './listas'
 
 interface Props {
   titulo: string

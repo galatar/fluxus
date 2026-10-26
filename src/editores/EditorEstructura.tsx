@@ -2,7 +2,8 @@ import { Plus } from 'lucide-react'
 import type { Eje } from '../estructura'
 import type { Banda, Estructura, Nodo } from '../tipos'
 import { bandaDe } from '../estructura'
-import { BotonesFila, mover } from './Filas'
+import { BotonesFila } from './Filas'
+import { mover } from './listas'
 
 interface Props {
   estructura: Estructura

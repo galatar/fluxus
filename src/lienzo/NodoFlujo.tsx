@@ -1,12 +1,10 @@
 import { Handle, NodeResizer, Position, type NodeProps } from '@xyflow/react'
 import { CircleAlert, TriangleAlert } from 'lucide-react'
-import { createContext, useContext } from 'react'
+import { useContext } from 'react'
 import { TIPOS } from '../catalogo'
 import { resumenNodo } from '../dominio'
 import type { Nodo } from '../tipos'
-
-/** Problemas por caja; solo se rellena mientras está abierta la revisión. */
-export const ProblemasContexto = createContext<Map<string, { nivel: 'error' | 'aviso'; textos: string[] }>>(new Map())
+import { ProblemasContexto } from './ProblemasContexto'
 
 const LADOS = [
   ['top', Position.Top],

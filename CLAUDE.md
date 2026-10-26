@@ -1,4 +1,4 @@
-# Flujus
+# Fluxus
 
 Editor de diagramas de flujo para modelar aplicaciones de gestión administrativa de RR. HH.
 (PTGAS, Universidad de Sevilla). Lo usa gente que no programa: el lenguaje de la interfaz es
@@ -12,14 +12,14 @@ Todo el código, los nombres y los comentarios van en español.
 ```bash
 npm run dev      # Vite, normalmente en http://localhost:5199 (npx vite --port 5199)
 npm run build    # tsc -b + vite build: tiene que pasar antes de cada commit
-npx oxlint src   # 3 avisos conocidos y aceptados (fast-refresh en Filas/NodoFlujo, ref en Editor)
+npx oxlint src   # 1 aviso conocido y aceptado (ref en render en Editor, patrón deliberado)
 ```
 
 ## Stack
 
 Vite 8 + React 19 + TypeScript 6, `@xyflow/react` 12 (React Flow), `lucide-react`,
 `html-to-image` (exportar PNG/SVG), JetBrains Mono. Sin backend: los esquemas viven en
-localStorage (`flujus:esquemas`, más `flujus:activo`, `flujus:tema`, `flujus:lateral`, `flujus:orden`).
+localStorage (`fluxus:esquemas`, más `fluxus:activo`, `fluxus:tema`, `fluxus:lateral`, `fluxus:orden`).
 
 ## Mapa del código (`src/`)
 
@@ -58,7 +58,7 @@ localStorage (`flujus:esquemas`, más `flujus:activo`, `flujus:tema`, `flujus:la
 ## Cómo se prueba
 
 Siempre en un navegador de verdad y con el ratón, no solo colocando cosas por código:
-`playwright-cli -s=flujus` (en zsh: `P() { playwright-cli -s=flujus "$@"; }`). El primer
+`playwright-cli -s=fluxus` (en zsh: `P() { playwright-cli -s=fluxus "$@"; }`). El primer
 `mousemove` tras `mousedown` solo arranca el arrastre: mover 1 px antes del recorrido. Las capturas
 van a `.playwright-cli/` (ignorada en git). Comprobar el resultado leyendo `localStorage` y mirando
 la captura. Decir «comprobado» o «sin comprobar», nunca «debería funcionar».

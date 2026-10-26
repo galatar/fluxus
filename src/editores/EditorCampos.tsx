@@ -2,7 +2,8 @@ import { Plus } from 'lucide-react'
 import { nuevoId } from '../almacen'
 import { aClave, opcionesDe, TIPOS_CAMPO } from '../dominio'
 import type { Campo, TipoCampo } from '../tipos'
-import { BotonesFila, mover } from './Filas'
+import { BotonesFila } from './Filas'
+import { mover } from './listas'
 
 interface Props {
   titulo: string

@@ -34,12 +34,13 @@ import { Inspector, type QueEditar } from './Inspector'
 import { Leyenda } from './Leyenda'
 import { useHistorial } from './historial'
 import { LecturaContexto, resaltar, type ModoLectura } from './lectura'
-import { NodoFlujo, ProblemasContexto } from './NodoFlujo'
+import { NodoFlujo } from './NodoFlujo'
+import { ProblemasContexto } from './ProblemasContexto'
 import { Revision } from './Revision'
 
 const nodeTypes = { nodo: NodoFlujo }
 const edgeTypes = { conexion: ConexionFlujo }
-const MIME = 'application/x-flujus-tipo'
+const MIME = 'application/x-fluxus-tipo'
 
 type EstadoDialogo = { que: QueEditar; id: string } | { que: 'estructura' }
 

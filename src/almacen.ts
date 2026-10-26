@@ -1,6 +1,15 @@
 import type { Campo, Conexion, Esquema, Nodo, TipoConexion } from './tipos'
 
-const CLAVE = 'flujus:esquemas'
+// El proyecto se llamaba «flujus»; al pasar a «fluxus» se renombran las claves
+// de localStorage conservando los datos ya guardados en el navegador. Se copia
+// una sola vez cada clave vieja a la nueva si esta no existe todavía.
+for (const vieja of ['esquemas', 'orden', 'activo', 'tema', 'lateral']) {
+  const nueva = `fluxus:${vieja}`
+  const previo = localStorage.getItem(`flujus:${vieja}`)
+  if (previo !== null && localStorage.getItem(nueva) === null) localStorage.setItem(nueva, previo)
+}
+
+const CLAVE = 'fluxus:esquemas'
 
 /** La parrilla coincide con los puntos del fondo. */
 export const PARRILLA = 20
@@ -32,7 +41,7 @@ function migrar(e: Esquema): Esquema {
 export const nuevoId = () => crypto.randomUUID()
 
 const ahora = () => new Date().toISOString()
-const CLAVE_ORDEN = 'flujus:orden'
+const CLAVE_ORDEN = 'fluxus:orden'
 
 export function cargarEsquemas(): Esquema[] {
   try {
@@ -80,14 +89,14 @@ export function exportar(esquema: Esquema) {
   const blob = new Blob([JSON.stringify(esquema, null, 2)], { type: 'application/json' })
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)
-  a.download = `${esquema.nombre.replace(/[^\p{L}\p{N}]+/gu, '-').toLowerCase()}.flujus.json`
+  a.download = `${esquema.nombre.replace(/[^\p{L}\p{N}]+/gu, '-').toLowerCase()}.fluxus.json`
   a.click()
   URL.revokeObjectURL(a.href)
 }
 
 export async function importar(fichero: File): Promise<Esquema> {
   const datos = JSON.parse(await fichero.text()) as Esquema
-  if (!Array.isArray(datos.nodes) || !Array.isArray(datos.edges)) throw new Error('El fichero no es un esquema de Flujus')
+  if (!Array.isArray(datos.nodes) || !Array.isArray(datos.edges)) throw new Error('El fichero no es un esquema de Fluxus')
   return migrar({ ...datos, id: nuevoId(), actualizado: ahora() })
 }
 

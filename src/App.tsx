@@ -25,20 +25,20 @@ const fecha = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short',
 
 export default function App() {
   const [esquemas, setEsquemas] = useState<Esquema[]>(cargarEsquemas)
-  const [activoId, setActivoId] = useState(() => leer('flujus:activo') ?? esquemas[0]?.id)
-  const [tema, setTema] = useState<Tema>(() => (leer('flujus:tema') as Tema) ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'))
-  const [plegado, setPlegado] = useState(() => leer('flujus:lateral') === 'plegado')
+  const [activoId, setActivoId] = useState(() => leer('fluxus:activo') ?? esquemas[0]?.id)
+  const [tema, setTema] = useState<Tema>(() => (leer('fluxus:tema') as Tema) ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'))
+  const [plegado, setPlegado] = useState(() => leer('fluxus:lateral') === 'plegado')
   const ficheroRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => guardarEsquemas(esquemas), [esquemas])
   useEffect(() => {
     document.documentElement.dataset.theme = tema
-    escribir('flujus:tema', tema)
+    escribir('fluxus:tema', tema)
   }, [tema])
   useEffect(() => {
-    if (activoId) escribir('flujus:activo', activoId)
+    if (activoId) escribir('fluxus:activo', activoId)
   }, [activoId])
-  useEffect(() => escribir('flujus:lateral', plegado ? 'plegado' : 'abierto'), [plegado])
+  useEffect(() => escribir('fluxus:lateral', plegado ? 'plegado' : 'abierto'), [plegado])
 
   const activo = esquemas.find((e) => e.id === activoId) ?? esquemas[0]
 
@@ -70,7 +70,7 @@ export default function App() {
       <aside className="lateral">
         <div className="marca">
           <Workflow size={18} className="solo-abierto" />
-          <span className="solo-abierto">Flujus</span>
+          <span className="solo-abierto">Fluxus</span>
           <button
             className="plegar"
             onClick={() => setPlegado(!plegado)}
