@@ -15,9 +15,8 @@ import {
   type NodeChange,
 } from '@xyflow/react'
 import { toPng, toSvg } from 'html-to-image'
-import { Rows3 } from 'lucide-react'
 import { aParrilla, limpiar, nuevoId, PARRILLA } from '../almacen'
-import { ORDEN_TIPOS, TIPOS } from '../catalogo'
+import { TIPOS } from '../catalogo'
 import { PLANTILLA_VACIA, variablesDe } from '../dominio'
 import { Dialogo } from '../editores/Dialogo'
 import { EditorCampos } from '../editores/EditorCampos'
@@ -35,6 +34,7 @@ import { Leyenda } from './Leyenda'
 import { useHistorial } from './historial'
 import { LecturaContexto, resaltar, type ModoLectura } from './lectura'
 import { NodoFlujo } from './NodoFlujo'
+import { Paleta } from './Paleta'
 import { ProblemasContexto } from './ProblemasContexto'
 import { Revision } from './Revision'
 
@@ -387,39 +387,9 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
         </ViewportPortal>
         <Carriles estructura={estructura} nodos={nodes} onTamano={cambiarTamano} onAbrir={abrirEstructura} />
 
-        <Panel position="top-left" className="panel paleta">
-          <div className="panel-titulo">Elementos</div>
-          {ORDEN_TIPOS.map((t) => {
-            const Icono = TIPOS[t].icono
-            return (
-              <button
-                key={t}
-                className={`paleta-item t-${t}`}
-                draggable
-                onDragStart={(ev) => {
-                  ev.dataTransfer.setData(MIME, t)
-                  ev.dataTransfer.effectAllowed = 'move'
-                }}
-                onClick={() => agregarEnCentro(t)}
-                title={`${TIPOS[t].ayuda}. Arrastra al lienzo o haz clic.`}
-              >
-                <span className="muestra">
-                  <Icono size={12} />
-                </span>
-                {TIPOS[t].nombre}
-              </button>
-            )
-          })}
-          <div className="paleta-separador" />
-          <button className="paleta-item" onClick={abrirEstructura} title="Filas por actor y columnas por fase">
-            <span className="muestra neutra">
-              <Rows3 size={12} />
-            </span>
-            Carriles y fases
-          </button>
-        </Panel>
+        <Paleta mime={MIME} onAgregar={agregarEnCentro} onEstructura={abrirEstructura} />
 
-        {haySeleccion ? (
+        {haySeleccion && (
           <Panel position="top-right" className="panel inspector">
             <Inspector
               nodos={nodes}
@@ -430,10 +400,6 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
               onBorrar={borrar}
               onAbrir={(id, que) => setDialogo({ id, que })}
             />
-          </Panel>
-        ) : (
-          <Panel position="top-right" className="pista">
-            Arrastra elementos al lienzo · une cajas desde sus bordes · clic para editar · Supr borra
           </Panel>
         )}
 

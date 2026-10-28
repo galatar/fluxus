@@ -19,7 +19,7 @@ npx oxlint src   # 1 aviso conocido y aceptado (ref en render en Editor, patrón
 
 Vite 8 + React 19 + TypeScript 6, `@xyflow/react` 12 (React Flow), `lucide-react`,
 `html-to-image` (exportar PNG/SVG), JetBrains Mono. Sin backend: los esquemas viven en
-localStorage (`fluxus:esquemas`, más `fluxus:activo`, `fluxus:tema`, `fluxus:lateral`, `fluxus:orden`).
+localStorage (`fluxus:esquemas`, más `fluxus:activo`, `fluxus:tema`, `fluxus:lateral`, `fluxus:orden`, `fluxus:paleta`).
 
 ## Mapa del código (`src/`)
 
@@ -36,6 +36,7 @@ localStorage (`fluxus:esquemas`, más `fluxus:activo`, `fluxus:tema`, `fluxus:la
 | `lienzo/Carriles.tsx` | Carriles y fases dibujados detrás de las cajas, con bordes arrastrables |
 | `lienzo/historial.ts` | Deshacer/rehacer con fotos JSON del esquema |
 | `lienzo/lectura.ts` | Modos Camino y Foco |
+| `lienzo/Paleta.tsx` | Panel «Elementos»: se mueve por la cabecera (queda dentro del lienzo) y se pliega; posición y estado en `fluxus:paleta` |
 | `lienzo/Barra.tsx`, `Inspector.tsx`, `Revision.tsx`, `Leyenda.tsx` | Paneles |
 | `editores/` | Diálogos: campos de formulario, plantilla, documentos pedidos, condición, carriles y fases |
 | `App.tsx` | Lista de esquemas (plegable), cabecera, importar/exportar |
