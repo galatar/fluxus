@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Copy, Download, Moon, PanelLeftClose, PanelLeftOpen, Plus, Sparkles, Sun, Trash2, Upload, Workflow } from 'lucide-react'
+import { Copy, Download, Moon, PanelLeftClose, PanelLeftOpen, Plus, Sparkles, Sun, Trash2, Upload } from 'lucide-react'
 import { cargarEsquemas, esquemaEjemplo, esquemaVacio, exportar, guardarEsquemas, importar, nuevoId } from './almacen'
 import { Editor } from './lienzo/Editor'
+import { Logo } from './Logo'
 import type { Esquema } from './tipos'
 
 type Tema = 'light' | 'dark'
@@ -69,8 +70,9 @@ export default function App() {
     <div className={`app${plegado ? ' plegado' : ''}`}>
       <aside className="lateral">
         <div className="marca">
-          <Workflow size={18} className="solo-abierto" />
-          <span className="solo-abierto">Fluxus</span>
+          <span className="solo-abierto" aria-label="Fluxus">
+            <Logo />
+          </span>
           <button
             className="plegar"
             onClick={() => setPlegado(!plegado)}
