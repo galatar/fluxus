@@ -5,73 +5,82 @@
   --mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
   --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
-  --fondo: #f6f8fa;
-  --punto: #d3dae2;
+  /* Misma paleta que mapa-tic: fondo azulado, violeta de acento y cian de aplicación. */
+  --fondo: #f6f8fb;
+  --punto: #d5dbe7;
   --superficie: #ffffff;
-  --superficie-2: #f1f4f7;
-  --borde: #e2e7ed;
-  --texto: #111827;
-  --texto-2: #5b6474;
-  --texto-3: #98a2b3;
+  --superficie-2: #eef2f8;
+  --borde: #dfe4ee;
+  --texto: #151a2b;
+  --texto-2: #5b6478;
+  --texto-3: #8b95ab;
   --relleno-base: #ffffff;
   --mezcla: 11%;
-  --sombra: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 14px rgba(15, 23, 42, 0.05);
+  --sombra: 0 1px 2px rgba(21, 26, 43, 0.04), 0 4px 14px rgba(21, 26, 43, 0.05);
 
-  --c-inicio: #15803d;
-  --c-paso: #0e7490;
-  --c-formulario: #2563eb;
+  --c-inicio: #65a30d;
+  --c-paso: #0891b2;
+  --c-formulario: #2f6fdb;
   --c-aportado: #c026d3;
-  --c-documento: #047857;
-  --c-decision: #7c3aed;
-  --c-espera: #c2410c;
+  --c-documento: #059669;
+  --c-decision: #7c4dff;
+  --c-espera: #d9730d;
   --c-notificacion: #a16207;
-  --c-sistema: #64748b;
-  --c-ok: #15803d;
-  --c-ko: #dc2626;
+  --c-sistema: #7a8499;
+  --c-ok: #059669;
+  --c-ko: #e11d48;
 
-  --carril-fondo: rgba(241, 245, 249, 0.55);
-  --carril-fondo-2: rgba(248, 250, 252, 0.35);
-  --carril-borde: #cfd8e3;
+  --carril-fondo: rgba(238, 242, 248, 0.55);
+  --carril-fondo-2: rgba(246, 248, 251, 0.35);
+  --carril-borde: #cdd5e3;
 
-  --a-normal: #3f8f6b;
-  --a-alternativa: #7c3aed;
-  --a-error: #dc2f4a;
-  --acento: #059669;
+  --a-normal: #059669;
+  --a-alternativa: #d9730d;
+  --a-error: #e11d48;
+  --acento: #7c4dff;
+  --sobre-acento: #ffffff;
+
+  --logo-a: #0891b2;
+  --logo-b: #7c4dff;
 }
 
 :root[data-theme='dark'] {
-  --fondo: #070d1a;
-  --punto: #1b2638;
-  --superficie: #0d1526;
-  --superficie-2: #111c31;
-  --borde: #1f2d44;
-  --texto: #f1f5fb;
-  --texto-2: #9eb0c7;
-  --texto-3: #5b6e87;
-  --relleno-base: #0b1322;
+  --fondo: #070b16;
+  --punto: #19233d;
+  --superficie: #0e1424;
+  --superficie-2: #141c31;
+  --borde: #1f2a44;
+  --texto: #e8edf9;
+  --texto-2: #8f9ab4;
+  --texto-3: #6b7898;
+  --relleno-base: #0b1020;
   --mezcla: 16%;
   --sombra: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 18px rgba(0, 0, 0, 0.25);
 
-  --c-inicio: #4ade80;
-  --c-paso: #67e8f9;
-  --c-formulario: #93b4fd;
+  --c-inicio: #a3e635;
+  --c-paso: #2dd4e6;
+  --c-formulario: #60a5fa;
   --c-aportado: #f0abfc;
-  --c-documento: #5eead4;
-  --c-decision: #c4b5fd;
-  --c-espera: #fdba74;
+  --c-documento: #34d399;
+  --c-decision: #a78bfa;
+  --c-espera: #fbaa3c;
   --c-notificacion: #fde047;
-  --c-sistema: #a5b4c7;
-  --c-ok: #4ade80;
+  --c-sistema: #8f9ab4;
+  --c-ok: #34d399;
   --c-ko: #fb7185;
 
-  --carril-fondo: rgba(15, 26, 46, 0.55);
-  --carril-fondo-2: rgba(11, 19, 34, 0.35);
-  --carril-borde: #22324c;
+  --carril-fondo: rgba(14, 20, 36, 0.6);
+  --carril-fondo-2: rgba(11, 16, 32, 0.35);
+  --carril-borde: #26324f;
 
-  --a-normal: #5eead4;
-  --a-alternativa: #a78bfa;
+  --a-normal: #34d399;
+  --a-alternativa: #fbaa3c;
   --a-error: #fb7185;
-  --acento: #2dd4bf;
+  --acento: #a78bfa;
+  --sobre-acento: #0e1424;
+
+  --logo-a: #2dd4e6;
+  --logo-b: #a78bfa;
 }
 
 * {
@@ -170,10 +179,6 @@ textarea {
   align-items: center;
   gap: 8px;
   padding: 0 6px 6px;
-  font-family: var(--mono);
-  font-weight: 700;
-  font-size: 16px;
-  color: var(--acento);
 }
 .marca span {
   color: var(--texto);
@@ -329,11 +334,8 @@ textarea {
 .boton.primario {
   background: var(--acento);
   border-color: var(--acento);
-  color: #fff;
+  color: var(--sobre-acento);
   font-weight: 550;
-}
-:root[data-theme='dark'] .boton.primario {
-  color: #04211b;
 }
 .boton.primario:hover {
   filter: brightness(1.08);
