@@ -972,6 +972,17 @@ input.error {
   display: flex;
   gap: 16px;
 }
+.radios.en-columna {
+  flex-direction: column;
+  gap: 6px;
+}
+.radios.en-columna label {
+  align-items: flex-start;
+}
+.radios.en-columna input {
+  margin: 1px 0 0;
+  flex: none;
+}
 .radios label {
   flex-direction: row;
   align-items: center;

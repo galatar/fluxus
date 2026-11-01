@@ -13,7 +13,7 @@ export type Tipo =
   | 'fin'
   | 'grupo'
 
-export type TipoCampo = 'texto' | 'parrafo' | 'numero' | 'fecha' | 'sino' | 'lista' | 'email' | 'dni'
+export type TipoCampo = 'texto' | 'parrafo' | 'numero' | 'fecha' | 'sino' | 'lista' | 'radio' | 'casilla' | 'email' | 'dni'
 
 export interface Campo {
   id: string
@@ -22,7 +22,7 @@ export interface Campo {
   clave: string
   tipo: TipoCampo
   obligatorio: boolean
-  /** Una opción por línea; solo para tipo 'lista'. */
+  /** Una opción por línea; para los tipos 'lista', 'radio' y 'casilla'. */
   opciones?: string
   ayuda?: string
 }

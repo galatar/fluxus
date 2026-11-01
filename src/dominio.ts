@@ -6,7 +6,9 @@ export const TIPOS_CAMPO: Record<TipoCampo, string> = {
   numero: 'Número',
   fecha: 'Fecha',
   sino: 'Sí / No',
-  lista: 'Lista de opciones',
+  lista: 'Lista desplegable',
+  radio: 'Una opción (botones)',
+  casilla: 'Casillas (marcar)',
   email: 'Correo electrónico',
   dni: 'DNI / NIE',
 }
@@ -47,8 +49,11 @@ export function aClave(texto: string) {
   )
 }
 
-export const opcionesDe = (c?: Campo) =>
-  c?.tipo === 'sino' ? ['Sí', 'No'] : (c?.opciones ?? '').split('\n').map((o) => o.trim()).filter(Boolean)
+export const opcionesDe = (c?: Campo) => {
+  const propias = (c?.opciones ?? '').split('\n').map((o) => o.trim()).filter(Boolean)
+  // Una casilla sin opciones es una sola casilla: marcada (Sí) o sin marcar (No).
+  return c?.tipo === 'sino' || (c?.tipo === 'casilla' && propias.length === 0) ? ['Sí', 'No'] : propias
+}
 
 export interface Variable {
   clave: string

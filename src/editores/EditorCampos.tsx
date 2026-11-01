@@ -51,9 +51,9 @@ export function EditorCampos({ titulo, campos, onCambio }: Props) {
               </label>
               <BotonesFila i={i} total={campos.length} onMover={(d) => onCambio(mover(campos, i, d))} onQuitar={() => onCambio(campos.filter((x) => x.id !== c.id))} />
             </div>
-            {c.tipo === 'lista' && (
+            {(c.tipo === 'lista' || c.tipo === 'radio' || c.tipo === 'casilla') && (
               <label>
-                Opciones (una por línea)
+                {c.tipo === 'casilla' ? 'Opciones (una por línea; vacío = una sola casilla)' : 'Opciones (una por línea)'}
                 <textarea rows={3} value={c.opciones ?? ''} onChange={(e) => cambiar(c.id, { opciones: e.target.value })} />
               </label>
             )}
@@ -117,6 +117,28 @@ function Control({ campo }: { campo: Campo }) {
           ))}
         </select>
       )
+    case 'radio':
+      return (
+        <div className="radios en-columna">
+          {opcionesDe(campo).map((o) => (
+            <label key={o}>
+              <input type="radio" name={campo.id} /> {o}
+            </label>
+          ))}
+        </div>
+      )
+    case 'casilla': {
+      const propias = (campo.opciones ?? '').trim() ? opcionesDe(campo) : ['Marcada']
+      return (
+        <div className="radios en-columna">
+          {propias.map((o) => (
+            <label key={o}>
+              <input type="checkbox" /> {o}
+            </label>
+          ))}
+        </div>
+      )
+    }
     case 'sino':
       return (
         <div className="radios">
