@@ -216,3 +216,139 @@ export function esquemaEjemplo(): Esquema {
     ],
   }
 }
+
+// --- Ejemplo: presupuesto de la unidad -------------------------------------
+
+const INFORME_TRIMESTRAL = `INFORME DE ESTADO TRIMESTRAL
+
+Unidad: {{unidad}} · Ejercicio: {{ejercicio}}
+Emitido el: {{fecha_actual}}
+
+Partidas del ejercicio con su saldo, lo gastado y el porcentaje ejecutado:
+{{partidas}}
+
+Cada partida va acompañada de su cuantía, gasto acumulado y saldo disponible.`
+
+const INFORME_CIERRE = `CUENTA DE CIERRE DEL EJERCICIO
+
+Unidad: {{unidad}} · Ejercicio: {{ejercicio}}
+Emitido el: {{fecha_actual}}
+
+Balance por partida del ejercicio:
+{{partidas}}
+
+Fondo de reserva no comprometido: {{fondo_reserva}}`
+
+const PARTIDAS_EJEMPLO = 'Material de oficina\nReprografía\nMantenimiento\nViajes y dietas\nImprenta y publicaciones'
+
+/**
+ * App para preparar un presupuesto sencillo por partidas, registrar lo gastado
+ * en cada una, controlar que no se supere la cuantía y emitir informes de
+ * estado trimestrales y de cierre del ejercicio.
+ */
+export function esquemaPresupuesto(): Esquema {
+  const nodos = [
+    n('n1', 'inicio', 60, 290, 'Inicio', 'arranca la planificación del ejercicio'),
+    n('n2', 'formulario', 280, 290, 'Crear presupuesto', 'partidas y cuantía del ejercicio', {
+      campos: [
+        campo('ejercicio', 'Ejercicio', 'numero'),
+        campo('partidas', 'Partidas del presupuesto', 'parrafo', true, undefined),
+        campo('fondo_reserva', 'Fondo de reserva', 'numero', false),
+      ],
+    }),
+    n('n3', 'decision', 500, 290, '¿Aprobado?', 'lo revisa el responsable de la unidad'),
+    n('n4', 'sistema', 720, 550, 'Registrar presupuesto', 'la app lo guarda y activa el seguimiento'),
+    n('n5', 'formulario', 1020, 290, 'Registrar gasto', 'importe, partida y justificante', {
+      campos: [
+        campo('partida', 'Partida', 'lista', true, PARTIDAS_EJEMPLO),
+        campo('importe', 'Importe', 'numero'),
+        campo('concepto', 'Concepto', 'texto'),
+        campo('proveedor', 'Proveedor', 'texto', false),
+        campo('fecha_gasto', 'Fecha del gasto', 'fecha'),
+      ],
+    }),
+    n('n6', 'sistema', 1020, 550, 'Verificar saldo', 'la app resta el importe de la partida'),
+    n('n7', 'decision', 1260, 550, '¿Hay saldo suficiente?', 'compara el gasto con lo disponible en la partida'),
+    n('n8', 'notificacion', 1260, 30, 'Aviso: partida sin fondos', 'avisa a la unidad de que se ha superado la cuantía'),
+    n('n9', 'sistema', 1500, 550, 'Imputar gasto', 'anota el gasto y actualiza el saldo de la partida'),
+    n('n10', 'decision', 2160, 290, '¿Fin de trimestre?', 'llegado el momento, se tiran los informes de estado'),
+    n('n11', 'sistema', 2400, 550, 'Recopilar gastos del trimestre', 'la app agrupa lo gastado de cada partida'),
+    n('n12', 'documento', 2600, 290, 'Informe de estado trimestral', 'plantilla: resumen del trimestre', {
+      plantilla: { formato: 'pdf', nombreFichero: 'informe-trimestral-{{ejercicio}}', cuerpo: INFORME_TRIMESTRAL },
+    }),
+    n('n13', 'decision', 2600, 30, '¿Revisado?', 'lo valida el responsable de la unidad'),
+    n('n14', 'notificacion', 2820, 30, 'Enviar a gerencia', 'se remite el informe trimestral'),
+    n('n15', 'decision', 3000, 290, '¿Fin de ejercicio?', 'terminado el año, se prepara el cierre'),
+    n('n16', 'sistema', 3200, 550, 'Acumular saldos', 'suma el gasto y calcula el remanente'),
+    n('n17', 'documento', 3400, 290, 'Informe de cierre', 'plantilla: cuenta del ejercicio', {
+      plantilla: { formato: 'pdf', nombreFichero: 'cierre-{{ejercicio}}', cuerpo: INFORME_CIERRE },
+    }),
+    n('n18', 'decision', 3400, 30, '¿Aprobado?', 'lo valida el responsable de la unidad'),
+    n('n19', 'notificacion', 3620, 30, 'Enviar a gerencia', 'se remite la cuenta de cierre'),
+    n('n20', 'fin', 3820, 290, 'Ejercicio cerrado', 'presupuesto liquidado', { resultado: 'ok' }),
+  ]
+
+  const aprobado = e('n3', 'right', 'n4', 'left', 'normal', 'sí')
+  aprobado.data!.porDefecto = true
+  const conSaldo = e('n7', 'right', 'n9', 'left', 'normal', 'sí')
+  conSaldo.data!.porDefecto = true
+  const trimestreSigue = e('n10', 'left', 'n5', 'right', 'alternativa', 'no')
+  trimestreSigue.data!.porDefecto = true
+  const trimestreTermina = e('n10', 'right', 'n11', 'left', 'normal', 'sí')
+  const revisado = e('n13', 'right', 'n14', 'left', 'normal', 'sí')
+  revisado.data!.porDefecto = true
+  const nuevoTrimestre = e('n15', 'left', 'n10', 'top', 'alternativa', 'no · nuevo trimestre')
+  nuevoTrimestre.data!.porDefecto = true
+  const cierre = e('n15', 'right', 'n16', 'left', 'normal', 'sí')
+  const cierreAprobado = e('n18', 'right', 'n19', 'left', 'normal', 'sí')
+  cierreAprobado.data!.porDefecto = true
+
+  return {
+    ...esquemaVacio('Presupuesto de la unidad'),
+    descripcion:
+      'App para preparar un presupuesto por partidas, seguir lo que se gasta en cada una y emitir informes de estado trimestrales y de cierre del ejercicio.',
+    nodes: nodos,
+    estructura: {
+      y0: -100,
+      carriles: [
+        { id: 'c1', nombre: 'Responsable de la unidad', tamano: 260 },
+        { id: 'c2', nombre: 'Unidad de gestión', tamano: 260 },
+        { id: 'c3', nombre: 'App de presupuesto', tamano: 260 },
+      ],
+      x0: -160,
+      fases: [
+        { id: 'f1', nombre: 'Configuración', tamano: 1020 },
+        { id: 'f2', nombre: 'Seguimiento del gasto', tamano: 900 },
+        { id: 'f3', nombre: 'Informes trimestrales', tamano: 1100 },
+        { id: 'f4', nombre: 'Cierre del ejercicio', tamano: 900 },
+      ],
+    },
+    edges: [
+      e('n1', 'right', 'n2', 'left', 'normal'),
+      e('n2', 'right', 'n3', 'left', 'normal', 'enviar a revisar'),
+      e('n3', 'top', 'n2', 'bottom', 'alternativa', 'no'),
+      aprobado,
+      e('n4', 'right', 'n5', 'left', 'normal'),
+      e('n5', 'bottom', 'n6', 'top', 'normal'),
+      e('n6', 'right', 'n7', 'left', 'normal'),
+      e('n7', 'top', 'n8', 'bottom', 'error', 'no hay saldo'),
+      conSaldo,
+      e('n8', 'left', 'n5', 'right', 'alternativa', 'revisar partida'),
+      e('n9', 'right', 'n10', 'left', 'normal'),
+      trimestreSigue,
+      trimestreTermina,
+      e('n11', 'right', 'n12', 'left', 'normal'),
+      e('n12', 'top', 'n13', 'bottom', 'normal'),
+      e('n13', 'bottom', 'n12', 'top', 'alternativa', 'no'),
+      revisado,
+      e('n14', 'right', 'n15', 'left', 'normal'),
+      nuevoTrimestre,
+      cierre,
+      e('n16', 'right', 'n17', 'left', 'normal'),
+      e('n17', 'top', 'n18', 'bottom', 'normal'),
+      e('n18', 'bottom', 'n17', 'top', 'alternativa', 'no'),
+      cierreAprobado,
+      e('n19', 'right', 'n20', 'left', 'normal'),
+    ],
+  }
+}
