@@ -1,8 +1,10 @@
 import { useReactFlow, useViewport } from '@xyflow/react'
-import { CircleCheck, Focus, ImageDown, Maximize, Minus, Plus, Redo2, Route, TriangleAlert, Undo2 } from 'lucide-react'
+import { CircleCheck, Focus, ImageDown, Maximize, Minus, Plus, Redo2, Route, Search, TriangleAlert, Undo2 } from 'lucide-react'
 import type { ModoLectura } from './lectura'
 
 interface Props {
+  buscando: boolean
+  onBuscar: () => void
   modo: ModoLectura | null
   onModo: (m: ModoLectura | null) => void
   revisando: boolean
@@ -19,7 +21,7 @@ const MAC = /Mac|iPhone|iPad/.test(navigator.platform)
 const TECLA = MAC ? '⌘' : 'Ctrl+'
 
 /** Barra inferior al estilo archify: deshacer, lectura, revisión, imagen y zoom. */
-export function Barra({ modo, onModo, revisando, onRevisar, errores, avisos, onImagen, onDeshacer, onRehacer }: Props) {
+export function Barra({ buscando, onBuscar, modo, onModo, revisando, onRevisar, errores, avisos, onImagen, onDeshacer, onRehacer }: Props) {
   const { zoomIn, zoomOut, fitView } = useReactFlow()
   const { zoom } = useViewport()
   const alternar = (m: ModoLectura) => onModo(modo === m ? null : m)
@@ -34,6 +36,9 @@ export function Barra({ modo, onModo, revisando, onRevisar, errores, avisos, onI
         <Redo2 size={14} />
       </button>
       <span className="barra-sep" />
+      <button className={buscando ? 'activo' : ''} onClick={onBuscar} title={`Buscar cajas, campos de formulario y documentos que se piden (${TECLA}F)`}>
+        <Search size={14} /> Buscar
+      </button>
       <button className={modo === 'camino' ? 'activo' : ''} onClick={() => alternar('camino')} title="Resalta todo lo que lleva a la caja elegida y lo que sale de ella">
         <Route size={14} /> Camino
       </button>

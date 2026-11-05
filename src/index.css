@@ -1419,3 +1419,80 @@ mark.variable.desconocida {
 .exportando .grupo.seleccionado {
   border-color: var(--texto-3);
 }
+
+/* --- Buscador de cajas y campos ------------------------------------------ */
+
+.react-flow__panel.buscador {
+  width: 380px;
+  max-width: calc(100% - 24px);
+  max-height: calc(100% - 140px);
+  gap: 6px;
+  padding: 8px;
+}
+.buscador-campo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 6px;
+  color: var(--texto-3);
+}
+.panel .buscador-campo input {
+  flex: 1;
+  min-width: 0;
+}
+.buscador-vacio {
+  margin: 0;
+  padding: 4px 6px 2px;
+}
+.buscador-lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+}
+.buscador-lista button {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  text-align: left;
+  color: var(--texto);
+  cursor: pointer;
+}
+.buscador-lista button.activo {
+  background: var(--superficie-2);
+}
+.buscador-lista svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.buscador-texto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.buscador-titulo {
+  font-size: 13px;
+  font-weight: 600;
+}
+.buscador-sub {
+  font-size: 11.5px;
+  color: var(--texto-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tarjeta.resaltada {
+  animation: destello 2s ease-out;
+}
+@keyframes destello {
+  0%,
+  60% {
+    border-color: var(--acento);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--acento) 30%, transparent);
+  }
+}

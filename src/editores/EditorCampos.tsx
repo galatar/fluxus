@@ -1,4 +1,5 @@
 import { Plus } from 'lucide-react'
+import { useEffect, useRef } from 'react'
 import { nuevoId } from '../almacen'
 import { aClave, opcionesDe, TIPOS_CAMPO } from '../dominio'
 import type { Campo, TipoCampo } from '../tipos'
@@ -8,10 +9,16 @@ import { mover } from './listas'
 interface Props {
   titulo: string
   campos: Campo[]
+  /** Id del campo al que se llega desde el buscador: se desplaza hasta él y se marca. */
+  resaltado?: string
   onCambio: (campos: Campo[]) => void
 }
 
-export function EditorCampos({ titulo, campos, onCambio }: Props) {
+export function EditorCampos({ titulo, campos, resaltado, onCambio }: Props) {
+  const marcado = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    marcado.current?.scrollIntoView({ block: 'center' })
+  }, [])
   const cambiar = (id: string, cambios: Partial<Campo>) => onCambio(campos.map((c) => (c.id === id ? { ...c, ...cambios } : c)))
 
   const renombrar = (c: Campo, etiqueta: string) => {
@@ -33,7 +40,7 @@ export function EditorCampos({ titulo, campos, onCambio }: Props) {
         <div className="seccion-titulo">Campos</div>
         {campos.length === 0 && <p className="ayuda">Todavía no hay campos. Añade el primero.</p>}
         {campos.map((c, i) => (
-          <div key={c.id} className="tarjeta">
+          <div key={c.id} ref={c.id === resaltado ? marcado : undefined} className={`tarjeta${c.id === resaltado ? ' resaltada' : ''}`}>
             <div className="tarjeta-fila">
               <label className="crece">
                 Pregunta

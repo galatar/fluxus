@@ -16,6 +16,7 @@ import {
 } from '@xyflow/react'
 import { toPng, toSvg } from 'html-to-image'
 import { aParrilla, limpiar, nuevoId, PARRILLA } from '../almacen'
+import { buscar, type Resultado } from '../busqueda'
 import { TIPOS } from '../catalogo'
 import { PLANTILLA_VACIA, variablesDe } from '../dominio'
 import { Dialogo } from '../editores/Dialogo'
@@ -27,6 +28,7 @@ import { ALTO_CARRIL, ANCHO_FASE, dentroDe, ESTRUCTURA_VACIA, limitesDibujo, pri
 import type { Banda, Conexion, ConexionData, Esquema, Estructura, Nodo, NodoData, Tipo } from '../tipos'
 import { revisar, type Problema } from '../validacion'
 import { Barra } from './Barra'
+import { Buscador } from './Buscador'
 import { Carriles } from './Carriles'
 import { ConexionFlujo, Flechas } from './ConexionFlujo'
 import { Inspector, type QueEditar } from './Inspector'
@@ -42,7 +44,7 @@ const nodeTypes = { nodo: NodoFlujo }
 const edgeTypes = { conexion: ConexionFlujo }
 const MIME = 'application/x-fluxus-tipo'
 
-type EstadoDialogo = { que: QueEditar; id: string } | { que: 'estructura' }
+type EstadoDialogo = { que: QueEditar; id: string; elemento?: string } | { que: 'estructura' }
 
 interface Props {
   esquema: Esquema
@@ -71,6 +73,9 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
   const [modo, setModo] = useState<ModoLectura | null>(null)
   const [encima, setEncima] = useState<string | null>(null)
   const [revisando, setRevisando] = useState(false)
+  const [buscando, setBuscando] = useState(false)
+  const [consulta, setConsulta] = useState('')
+  const entradaBusqueda = useRef<HTMLInputElement>(null)
 
   // Copias siempre al día para los manejadores que se disparan muy seguido
   // (arrastrar bordes y grupos) antes de que React vuelva a pintar.
@@ -111,7 +116,12 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
     const alPulsar = (e: KeyboardEvent) => {
       if (!(e.ctrlKey || e.metaKey) || dialogo) return
       const tecla = e.key.toLowerCase()
-      if (tecla === 'z') {
+      if (tecla === 'f') {
+        // Sustituye a la búsqueda del navegador: aquí se busca en el esquema.
+        e.preventDefault()
+        setBuscando(true)
+        entradaBusqueda.current?.select()
+      } else if (tecla === 'z') {
         e.preventDefault()
         if (e.shiftKey) rehacer()
         else deshacer()
@@ -295,11 +305,37 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
     if (id) fitView({ nodes: [{ id }], duration: 300, maxZoom: 1, padding: 1.5 })
   }
 
+  // --- Búsqueda -------------------------------------------------------------
+
+  const buscandoAlgo = buscando && consulta.trim() !== ''
+  const resultados = useMemo(() => (buscandoAlgo ? buscar(nodes, consulta) : []), [buscandoAlgo, nodes, consulta])
+
+  const cerrarBusqueda = () => {
+    setBuscando(false)
+    setConsulta('')
+  }
+
+  const irAResultado = (r: Resultado) => {
+    const id = r.nodo.id
+    setNodes((ns) => ns.map((n) => ({ ...n, selected: n.id === id })))
+    setEdges((es) => es.map((e) => ({ ...e, selected: false })))
+    fitView({ nodes: [{ id }], duration: 300, maxZoom: 1, padding: 1.5 })
+    if (r.clase === 'campo') setDialogo({ que: 'campos', id, elemento: r.campo.id })
+    if (r.clase === 'documento') setDialogo({ que: 'requisitos', id, elemento: r.doc.id })
+  }
+
   // --- Modo lectura ---------------------------------------------------------
 
   const elegidos = nodes.filter((n) => n.selected && n.data.tipo !== 'grupo').map((n) => n.id)
   const desde = (elegidos.length ? elegidos : encima ? [encima] : []).join(' ')
-  const luz = useMemo(() => (modo && desde ? resaltar(modo, desde.split(' '), edges) : null), [modo, desde, edges])
+  // Mientras se busca, la búsqueda manda sobre el modo lectura: se apaga lo que no coincide.
+  const luz = useMemo(() => {
+    if (buscandoAlgo) {
+      const nodos = new Set(resultados.map((r) => r.nodo.id))
+      return { nodos, conexiones: new Set(edges.filter((e) => nodos.has(e.source) && nodos.has(e.target)).map((e) => e.id)) }
+    }
+    return modo && desde ? resaltar(modo, desde.split(' '), edges) : null
+  }, [buscandoAlgo, resultados, modo, desde, edges])
   const nodosVista = useMemo(
     () => (luz ? nodes.map((n) => (n.data.tipo === 'grupo' || luz.nodos.has(n.id) ? n : { ...n, className: 'atenuado' })) : nodes),
     [nodes, luz],
@@ -407,6 +443,12 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
           <Leyenda nodos={nodes} conexiones={edges} />
         </Panel>
 
+        {buscando && (
+          <Panel position="top-center" className="panel buscador">
+            <Buscador consulta={consulta} resultados={resultados} entrada={entradaBusqueda} onConsulta={setConsulta} onIr={irAResultado} onCerrar={cerrarBusqueda} />
+          </Panel>
+        )}
+
         {revisando && (
           <Panel position="bottom-right" className="panel revision">
             <Revision problemas={problemas} onIr={irA} onCerrar={() => setRevisando(false)} />
@@ -415,6 +457,8 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
 
         <Panel position="bottom-right" className="panel-barra">
           <Barra
+            buscando={buscando}
+            onBuscar={() => (buscando ? cerrarBusqueda() : setBuscando(true))}
             modo={modo}
             onModo={setModo}
             revisando={revisando}
@@ -439,10 +483,10 @@ function EditorInterno({ esquema, tema, onCambio }: Props) {
       {enDialogo && dialogo && (
         <Dialogo antetitulo={TIPOS[enDialogo.data.tipo].nombre} titulo={enDialogo.data.titulo} onCerrar={cerrarDialogo}>
           {dialogo.que === 'campos' && (
-            <EditorCampos titulo={enDialogo.data.titulo} campos={enDialogo.data.campos ?? []} onCambio={(campos) => actualizarNodo(enDialogo.id, { campos })} />
+            <EditorCampos titulo={enDialogo.data.titulo} campos={enDialogo.data.campos ?? []} resaltado={dialogo.elemento} onCambio={(campos) => actualizarNodo(enDialogo.id, { campos })} />
           )}
           {dialogo.que === 'requisitos' && (
-            <EditorRequisitos titulo={enDialogo.data.titulo} docs={enDialogo.data.requisitos ?? []} onCambio={(requisitos) => actualizarNodo(enDialogo.id, { requisitos })} />
+            <EditorRequisitos titulo={enDialogo.data.titulo} docs={enDialogo.data.requisitos ?? []} resaltado={dialogo.elemento} onCambio={(requisitos) => actualizarNodo(enDialogo.id, { requisitos })} />
           )}
           {dialogo.que === 'plantilla' && (
             <EditorPlantilla

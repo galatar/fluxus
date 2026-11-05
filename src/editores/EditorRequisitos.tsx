@@ -1,4 +1,5 @@
 import { FileUp, Plus } from 'lucide-react'
+import { useEffect, useRef } from 'react'
 import { nuevoId } from '../almacen'
 import { FORMATOS_DOC } from '../dominio'
 import type { DocRequerido, FormatoDoc } from '../tipos'
@@ -8,10 +9,16 @@ import { mover } from './listas'
 interface Props {
   titulo: string
   docs: DocRequerido[]
+  /** Id del documento al que se llega desde el buscador: se desplaza hasta él y se marca. */
+  resaltado?: string
   onCambio: (docs: DocRequerido[]) => void
 }
 
-export function EditorRequisitos({ titulo, docs, onCambio }: Props) {
+export function EditorRequisitos({ titulo, docs, resaltado, onCambio }: Props) {
+  const marcado = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    marcado.current?.scrollIntoView({ block: 'center' })
+  }, [])
   const cambiar = (id: string, c: Partial<DocRequerido>) => onCambio(docs.map((d) => (d.id === id ? { ...d, ...c } : d)))
   const anadir = () => onCambio([...docs, { id: nuevoId(), nombre: 'Nuevo documento', obligatorio: true, formato: 'pdf', firmado: false }])
 
@@ -21,7 +28,7 @@ export function EditorRequisitos({ titulo, docs, onCambio }: Props) {
         <div className="seccion-titulo">Documentos que se piden</div>
         {docs.length === 0 && <p className="ayuda">Todavía no se pide ningún documento.</p>}
         {docs.map((d, i) => (
-          <div key={d.id} className="tarjeta">
+          <div key={d.id} ref={d.id === resaltado ? marcado : undefined} className={`tarjeta${d.id === resaltado ? ' resaltada' : ''}`}>
             <div className="tarjeta-fila">
               <label className="crece">
                 Documento
