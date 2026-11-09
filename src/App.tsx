@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Copy, Download, Moon, PanelLeftClose, PanelLeftOpen, Plus, Sparkles, Sun, Trash2, Upload } from 'lucide-react'
-import { cargarEsquemas, esquemaEjemplo, esquemaVacio, exportar, guardarEsquemas, importar, nuevoId } from './almacen'
+import type { Session } from '@supabase/supabase-js'
+import { CloudAlert, CloudCheck, CloudUpload, Copy, Download, LogOut, Moon, PanelLeftClose, PanelLeftOpen, Plus, Sparkles, Sun, Trash2, Upload } from 'lucide-react'
+import { esquemaEjemplo, esquemaVacio, exportar, importar, nuevoId } from './almacen'
+import { supabase } from './nube/cliente'
+import { useEsquemasNube, type EstadoGuardado } from './nube/useEsquemasNube'
 import { Editor } from './lienzo/Editor'
 import { Logo } from './Logo'
 import type { Esquema } from './tipos'
@@ -24,14 +27,21 @@ const escribir = (k: string, v: string) => {
 
 const fecha = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
-export default function App() {
-  const [esquemas, setEsquemas] = useState<Esquema[]>(cargarEsquemas)
-  const [activoId, setActivoId] = useState(() => leer('fluxus:activo') ?? esquemas[0]?.id)
+const ESTADOS: Record<EstadoGuardado, [typeof CloudCheck, string]> = {
+  cargando: [CloudUpload, 'Cargando tus esquemas…'],
+  guardando: [CloudUpload, 'Guardando…'],
+  guardado: [CloudCheck, 'Todo guardado'],
+  error: [CloudAlert, 'No se ha podido guardar; se reintenta solo'],
+}
+
+export default function App({ sesion }: { sesion: Session }) {
+  const usuario = sesion.user
+  const { esquemas, setEsquemas, estado } = useEsquemasNube(usuario.id)
+  const [activoId, setActivoId] = useState(() => leer('fluxus:activo') ?? undefined)
   const [tema, setTema] = useState<Tema>(() => (leer('fluxus:tema') as Tema) ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'))
   const [plegado, setPlegado] = useState(() => leer('fluxus:lateral') === 'plegado')
   const ficheroRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => guardarEsquemas(esquemas), [esquemas])
   useEffect(() => {
     document.documentElement.dataset.theme = tema
     escribir('fluxus:tema', tema)
@@ -43,9 +53,14 @@ export default function App() {
 
   const activo = esquemas.find((e) => e.id === activoId) ?? esquemas[0]
 
-  const cambiar = useCallback((id: string, cambios: Partial<Esquema>) => {
-    setEsquemas((es) => es.map((e) => (e.id === id ? { ...e, ...cambios, actualizado: new Date().toISOString() } : e)))
-  }, [])
+  const cambiar = useCallback(
+    (id: string, cambios: Partial<Esquema>) => {
+      setEsquemas((es) => es.map((e) => (e.id === id ? { ...e, ...cambios, actualizado: new Date().toISOString() } : e)))
+    },
+    [setEsquemas],
+  )
+  const [IconoEstado, textoEstado] = ESTADOS[estado]
+  const nombreUsuario = usuario.user_metadata?.full_name ?? usuario.user_metadata?.name ?? usuario.email ?? 'Tu cuenta'
 
   const crear = (e: Esquema) => {
     setEsquemas((es) => [...es, e])
@@ -115,6 +130,19 @@ export default function App() {
           ))}
         </nav>
 
+        <div className="cuenta" title={`${nombreUsuario}\n${textoEstado}`}>
+          <span className={`estado-guardado ${estado}`} aria-label={textoEstado}>
+            <IconoEstado size={14} />
+          </span>
+          <div className="cuenta-texto solo-abierto">
+            <div className="cuenta-nombre">{nombreUsuario}</div>
+            <div className="esquema-meta">{textoEstado}</div>
+          </div>
+          <button className="solo-abierto" onClick={() => supabase.auth.signOut()} title="Cerrar sesión" aria-label="Cerrar sesión">
+            <LogOut size={13} />
+          </button>
+        </div>
+
         <div className="pie">
           <button className="boton" onClick={() => crear(esquemaEjemplo())} title="Añade una copia del ejemplo de teletrabajo">
             <Sparkles size={13} /> <span className="solo-abierto">Ver un ejemplo</span>
@@ -155,6 +183,14 @@ export default function App() {
             </header>
             <Editor key={activo.id} esquema={activo} tema={tema} onCambio={cambiar} />
           </>
+        ) : estado === 'cargando' ? (
+          <div className="vacio">
+            <p>Cargando tus esquemas…</p>
+          </div>
+        ) : estado === 'error' && !esquemas.length ? (
+          <div className="vacio">
+            <p>No se han podido cargar tus esquemas. Comprueba la conexión y recarga la página.</p>
+          </div>
         ) : (
           <div className="vacio">
             <p>No hay ningún esquema.</p>

@@ -22,7 +22,7 @@ export const aParrilla = (v: number) => Math.round(v / PARRILLA) * PARRILLA
  */
 const VERSION = 2
 
-function migrar(e: Esquema): Esquema {
+export function migrar(e: Esquema): Esquema {
   const v1 = (e.version ?? 1) < 2
   const nodes = e.nodes.map((n) => {
     let { x, y } = n.position
