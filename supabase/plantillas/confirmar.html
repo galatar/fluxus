@@ -2,6 +2,6 @@
   <h2 style="font-weight: 650">Bienvenida a Fluxus</h2>
   <p>Para terminar de crear tu cuenta en Fluxus, escribe este código en la pantalla de entrada:</p>
   <p style="font: 700 28px/1 ui-monospace, Menlo, monospace; letter-spacing: 0.2em; color: #7c4dff">{{ .Token }}</p>
-  <p>O pulsa este enlace desde el navegador donde lo pediste: <a href="{{ .ConfirmationURL }}">entrar en Fluxus</a>.</p>
+  <p>O pulsa este enlace desde el navegador donde lo pediste: <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email">entrar en Fluxus</a>.</p>
   <p style="color: #5b6478; font-size: 13px">El código y el enlace sirven una sola vez y caducan en una hora. Si no has pedido entrar, ignora este correo.</p>
 </div>

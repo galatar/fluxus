@@ -25,9 +25,10 @@ Qué cambia respecto a `main`:
      vistas previas y `http://localhost:5199/**`.
 4. **Plantillas de correo** (Authentication → Emails → Templates): pegar
    `supabase/plantillas/entrar.html` en «Magic Link» y `supabase/plantillas/confirmar.html` en
-   «Confirm signup», con el asunto «Tu código para entrar en Fluxus». Así el correo trae un código
-   de 6 cifras además del enlace: el correo de la US (Microsoft 365) abre los enlaces para
-   revisarlos y los gasta antes que la persona, y el código sigue valiendo.
+   «Confirm signup», con el asunto «Tu código para entrar en Fluxus». El correo trae un código de
+   6 cifras y un enlace que lleva a la propia app (`?token_hash=…`), que lo canjea con JavaScript.
+   Así los filtros que abren los enlaces para revisarlos (Microsoft 365 en la US) no lo gastan,
+   cosa que sí pasaba con el enlace de Supabase por defecto (`{{ .ConfirmationURL }}`).
 5. **Correo**: el envío que trae Supabase solo deja unos pocos correos por hora. Para usarlo de
    verdad, configurar un SMTP propio en Authentication → Emails (Resend, o el de la US).
 

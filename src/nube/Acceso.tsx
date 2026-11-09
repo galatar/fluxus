@@ -21,10 +21,10 @@ const IconoGithub = () => (
 )
 
 /** Pantalla de entrada: enlace por correo, Google o GitHub. */
-export function Acceso() {
+export function Acceso({ errorEnlace = '' }: { errorEnlace?: string }) {
   const [correo, setCorreo] = useState('')
   const [enviado, setEnviado] = useState(false)
-  const [error, setError] = useState(errorDeLaUrl)
+  const [error, setError] = useState(() => (errorEnlace ? traducir(errorEnlace) : errorDeLaUrl()))
   const [ocupado, setOcupado] = useState(false)
   const [codigo, setCodigo] = useState('')
   const vuelta = location.origin + location.pathname
@@ -140,7 +140,7 @@ function errorDeLaUrl() {
 
 function traducir(mensaje: string) {
   if (/otp_expired|expired|invalid.*(token|otp)/i.test(mensaje))
-    return 'El enlace o el código ya no vale: o ha caducado o ya se usó (a veces el filtro del correo abre el enlace antes que tú). Pide otro correo y escribe el código que trae.'
+    return 'Ese enlace ya no vale: sirve una sola vez, caduca en una hora y, si pediste varios correos, solo vale el último. Pide otro y usa ese.'
   if (/rate limit/i.test(mensaje)) return 'Se han enviado demasiados correos seguidos. Espera unos minutos y vuelve a probar.'
   if (/invalid.*email/i.test(mensaje)) return 'Ese correo no parece válido.'
   if (/provider is not enabled/i.test(mensaje)) return 'Esa forma de entrar todavía no está activada.'
