@@ -1619,7 +1619,8 @@ mark.variable.desconocida {
   margin-top: 3px;
   color: var(--c-ok);
 }
-.acceso-aviso .enlace {
+.acceso-aviso .enlace,
+.acceso-caja > .enlace {
   display: block;
   margin-top: 6px;
   padding: 0;
