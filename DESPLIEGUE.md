@@ -23,7 +23,12 @@ Qué cambia respecto a `main`:
    - Site URL: la dirección de producción en Vercel (`https://fluxus-….vercel.app`).
    - Redirect URLs: esa misma con `/**`, `https://*-<tu-equipo>.vercel.app/**` para las
      vistas previas y `http://localhost:5199/**`.
-4. **Correo**: el envío que trae Supabase solo deja unos pocos correos por hora. Para usarlo de
+4. **Plantillas de correo** (Authentication → Emails → Templates): pegar
+   `supabase/plantillas/entrar.html` en «Magic Link» y `supabase/plantillas/confirmar.html` en
+   «Confirm signup», con el asunto «Tu código para entrar en Fluxus». Así el correo trae un código
+   de 6 cifras además del enlace: el correo de la US (Microsoft 365) abre los enlaces para
+   revisarlos y los gasta antes que la persona, y el código sigue valiendo.
+5. **Correo**: el envío que trae Supabase solo deja unos pocos correos por hora. Para usarlo de
    verdad, configurar un SMTP propio en Authentication → Emails (Resend, o el de la US).
 
 ## 2. Google y GitHub

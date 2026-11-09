@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Mail } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { KeyRound, Mail } from 'lucide-react'
 import { Logo } from '../Logo'
 import { supabase } from './cliente'
 
@@ -24,9 +24,15 @@ const IconoGithub = () => (
 export function Acceso() {
   const [correo, setCorreo] = useState('')
   const [enviado, setEnviado] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState(errorDeLaUrl)
   const [ocupado, setOcupado] = useState(false)
+  const [codigo, setCodigo] = useState('')
   const vuelta = location.origin + location.pathname
+
+  // Quita el #error=… de la barra de direcciones una vez leído.
+  useEffect(() => {
+    if (location.hash.includes('error')) history.replaceState(null, '', location.pathname + location.search)
+  }, [])
 
   const conCorreo = async (ev: React.FormEvent) => {
     ev.preventDefault()
@@ -36,6 +42,22 @@ export function Acceso() {
     setOcupado(false)
     if (error) setError(traducir(error.message))
     else setEnviado(true)
+  }
+
+  // El código del correo sirve aunque el enlace ya se haya gastado: los filtros
+  // de correo (Microsoft Safe Links y similares) abren los enlaces antes que la persona.
+  const conCodigo = async (ev: React.FormEvent) => {
+    ev.preventDefault()
+    setError('')
+    setOcupado(true)
+    const { error } = await supabase.auth.verifyOtp({ email: correo.trim(), token: codigo.replace(/\s/g, ''), type: 'email' })
+    setOcupado(false)
+    if (error)
+      setError(
+        /expired|invalid/i.test(error.message)
+          ? 'Ese código no es correcto o ya no vale (sirve una vez y caduca en una hora). Revísalo o pide otro correo.'
+          : traducir(error.message),
+      )
   }
 
   const conProveedor = async (proveedor: Proveedor) => {
@@ -51,15 +73,38 @@ export function Acceso() {
         <p className="acceso-lema">Diagramas de flujo para procedimientos de gestión. Entra para ver y guardar los tuyos.</p>
 
         {enviado ? (
-          <div className="acceso-aviso">
-            <Mail size={16} />
-            <div>
-              Te hemos enviado un enlace a <strong>{correo}</strong>. Ábrelo desde este mismo dispositivo para entrar.
-              <button className="enlace" onClick={() => setEnviado(false)}>
-                Usar otro correo
-              </button>
+          <>
+            <div className="acceso-aviso">
+              <Mail size={16} />
+              <div>
+                Te hemos enviado un correo a <strong>{correo}</strong>. Abre el enlace en este navegador o escribe aquí el código que trae.
+                <button
+                  className="enlace"
+                  onClick={() => {
+                    setEnviado(false)
+                    setCodigo('')
+                  }}
+                >
+                  Usar otro correo
+                </button>
+              </div>
             </div>
-          </div>
+            <form onSubmit={conCodigo} className="acceso-form">
+              <label htmlFor="codigo">Código del correo</label>
+              <input
+                id="codigo"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                required
+                placeholder="123456"
+                value={codigo}
+                onChange={(e) => setCodigo(e.target.value)}
+              />
+              <button className="boton primario" disabled={ocupado}>
+                <KeyRound size={14} /> {ocupado ? 'Comprobando…' : 'Entrar con el código'}
+              </button>
+            </form>
+          </>
         ) : (
           <form onSubmit={conCorreo} className="acceso-form">
             <label htmlFor="correo">Tu correo</label>
@@ -70,6 +115,8 @@ export function Acceso() {
           </form>
         )}
 
+        {error && <p className="acceso-error">{error}</p>}
+
         <div className="acceso-separador">o</div>
 
         <button className="boton" onClick={() => conProveedor('google')}>
@@ -79,13 +126,21 @@ export function Acceso() {
           <IconoGithub /> Entrar con GitHub
         </button>
 
-        {error && <p className="acceso-error">{error}</p>}
       </div>
     </div>
   )
 }
 
+/** Si el enlace del correo falla, Supabase vuelve con el error en la URL (#error=…). */
+function errorDeLaUrl() {
+  const datos = new URLSearchParams(location.hash.slice(1))
+  const codigo = datos.get('error_code') ?? datos.get('error')
+  return codigo ? traducir(`${codigo} ${datos.get('error_description') ?? ''}`) : ''
+}
+
 function traducir(mensaje: string) {
+  if (/otp_expired|expired|invalid.*(token|otp)/i.test(mensaje))
+    return 'El enlace o el código ya no vale: o ha caducado o ya se usó (a veces el filtro del correo abre el enlace antes que tú). Pide otro correo y escribe el código que trae.'
   if (/rate limit/i.test(mensaje)) return 'Se han enviado demasiados correos seguidos. Espera unos minutos y vuelve a probar.'
   if (/invalid.*email/i.test(mensaje)) return 'Ese correo no parece válido.'
   if (/provider is not enabled/i.test(mensaje)) return 'Esa forma de entrar todavía no está activada.'
