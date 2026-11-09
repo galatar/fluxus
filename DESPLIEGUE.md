@@ -42,8 +42,9 @@ La URL de vuelta en los dos es `https://<ref>.supabase.co/auth/v1/callback`.
 2. **Settings → Git → Production Branch: `vercel-deploy`**. Si no, producción saldría de `main`,
    que no tiene acceso con cuenta.
 3. Variables de entorno: `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` (la clave pública o
-   «publishable» de Supabase). Si se conecta Supabase desde el Marketplace de Vercel, valen las
-   `NEXT_PUBLIC_SUPABASE_*` que crea la integración (`vite.config.ts` las deja pasar).
+   «publishable» de Supabase). Si se conecta Supabase desde el Marketplace de Vercel, no hace
+   falta: valen las `VITE_PUBLIC_SUPABASE_URL` y `VITE_PUBLIC_SUPABASE_PUBLISHABLE_KEY` que crea.
+   Como Vite las mete en el código al compilar, tras cambiarlas hay que volver a desplegar.
 
 ## Probar en local
 
